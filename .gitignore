@@ -1,5 +1,5 @@
 .idea
-*/__pycach__/*
+*/__pycache__/*
 docs/*
 assets/*
 demo/*

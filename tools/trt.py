@@ -42,7 +42,8 @@ def main():
         args.experiment_name = exp.exp_name
 
     model = exp.get_model()
-    file_name = os.path.join(exp.output_dir, args.experiment_name)
+    file_name = os.path.join(exp.output_dir, args.experiment_name,
+                             max(os.listdir(os.path.join(exp.output_dir, args.experiment_name))))
     os.makedirs(file_name, exist_ok=True)
     if args.ckpt is None:
         ckpt_file = os.path.join(file_name, "best_ckpt.pth")

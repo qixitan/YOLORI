@@ -17,18 +17,17 @@ from yolori.exp import get_exp
 from yolori.utils import configure_nccl, fuse_model, get_local_rank, get_model_info, setup_logger
 
 import os
+
 os.environ["CUDA_VISIBLE_DEVICES"] = "6"
 
 
 def make_parser():
-    parser = argparse.ArgumentParser("YOLOX Eval")
+    parser = argparse.ArgumentParser("YOLORI Eval")
     parser.add_argument("-expn", "--experiment-name", type=str, default=None)
-    parser.add_argument("-n", "--name", type=str, default="yolox_dior_l_FPN", help="model name")
+    parser.add_argument("-n", "--name", type=str, help="model name")
 
     # distributed
-    parser.add_argument(
-        "--dist-backend", default="nccl", type=str, help="distributed backend"
-    )
+    parser.add_argument("--dist-backend", default="nccl", type=str, help="distributed backend" )
     parser.add_argument(
         "--dist-url",
         default=None,
@@ -126,7 +125,8 @@ def main(exp, args, num_gpu):
 
     rank = get_local_rank()
 
-    file_name = os.path.join(exp.output_dir, args.experiment_name)
+    file_name = os.path.join(exp.output_dir, args.experiment_name,
+                             max(os.listdir(os.path.join(exp.output_dir, args.experiment_name))))
 
     if rank == 0:
         os.makedirs(file_name, exist_ok=True)

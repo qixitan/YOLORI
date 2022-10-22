@@ -22,7 +22,6 @@ from .dior_classes import DIOR_CLASSES
 
 
 class AnnotationTransformDIOR(object):
-
     """Transforms a DIOR annotation in to a Tensor of bbox coords and label index
     Initilizd with a dictionary lookup of classmanes to indexes
 
@@ -81,7 +80,6 @@ class AnnotationTransformDIOR(object):
 
 
 class DIORDetection(Dataset):
-
     """
         DIORDetection Dataset Object
 
@@ -271,10 +269,10 @@ class DIORDetection(Dataset):
             mAPs.append(mAP)
 
         logger.info("--------------------------------------------------------------")
-        inf_map_5095 = "map_5095:".format(np.mean(mAPs))
-        logger.info(inf_map_5095)
-        inf_map_50 = "map_50:".format(mAPs[0])
+        inf_map_50 = "map_50: {}".format(mAPs[0])
         logger.info(inf_map_50)
+        inf_map_5095 = "map_5095: {}".format(np.mean(mAPs))
+        logger.info(inf_map_5095)
         logger.info("--------------------------------------------------------------")
         return np.mean(mAPs), mAPs[0]
 

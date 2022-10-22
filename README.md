@@ -10,7 +10,7 @@
 | 1015 |   测试基于DIOR&nano版本代码   | 1007下午被挤掉 1008重新开始 任务内容记录在train_log.txt，目前已完成train和val |    ✅     |
 | 1020 |     1、shell运行 2、TOOD      |                1、可以直接使用命令行运行代码                 |          |
 
-# 2计划module
+# 计划module
 
 ### Backbone
 
@@ -90,7 +90,15 @@ tensorboard --logdir=xxx --port=6006
 pkill -kill -t pts/x
 ```
 
+## 查询命令
 
+w 命令：显示登录的用户及其当前执行的任务
+
+last 命令：显示当前与过去登录系统的用户的信息
+
+who 命令：显示当前当登录的用户的信息
+
+users 命令：显示当前当登录的用户的用户名
 
 # 报错
 

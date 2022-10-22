@@ -35,12 +35,12 @@ def make_parser():
     parser.add_argument("--num_machines", default=1, type=int, help="num of node for training")
     parser.add_argument("--machine_rank", default=0, type=int, help="node rank for multi-node training")
 
+    parser.add_argument("-o", "--occupy", dest="occupy", action="store_true",
+                        help="occupy GPU memory first for training.", )
+    parser.add_argument("--cache", dest="cache", action="store_true",
+                        help="Caching imgs to RAM for fast training.", )
     parser.add_argument("--fp16", dest="fp16", default=True, action="store_true",
                         help="Adopting mix precision training.", )
-    parser.add_argument("--cache", dest="cache", default=True, action="store_true",
-                        help="Caching imgs to RAM for fast training.", )
-    parser.add_argument("-o", "--occupy", dest="occupy", default=True, action="store_true",
-                        help="occupy GPU memory first for training.", )
     parser.add_argument("opts", help="Modify config options using the command-line", default=None,
                         nargs=argparse.REMAINDER, )
     return parser

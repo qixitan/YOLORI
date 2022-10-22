@@ -1,17 +1,18 @@
 # -*- coding: UTF-8 -*-
 # @Author: qixitan
-# @Time: 2022/10/21
+# @Time: 2022/10/22
 
 import torch
-from yolori.models import ResNet, YOLOPAFPN, YOLOXHead
+from yolori.models import RepVGG, YOLOPAFPN, YOLOXHead
 from yolori.utils import get_model_info
+
 
 
 def func(backbone_size):
     x = torch.randn(1, 3, 224, 224)
-    model = ResNet(model_size=model_size)
+    model = RepVGG(model_size=model_size, deploy=False)
     backbone_info = get_model_info(model, (224, 224))
-    print("-------backbone_info: {}, backbone_info: train: {}-------".format(backbone_size, backbone_info))
+    print("------backbone_info: {}, backbone_info: train: {}-------".format(backbone_size, backbone_info))
 
     """backbone"""
     y = model(x)
@@ -19,7 +20,7 @@ def func(backbone_size):
 
     """neck"""
     in_features = model.out_features
-    in_channels = model.resnet_sizes[model_size]["width"][-len(in_features):]
+    in_channels = model.regvgg_size[model_size]["width"][-len(in_features):]
     neck = YOLOPAFPN(in_features=in_features, in_channels=in_channels)
     neck.backbone = model
     y = neck(x)
@@ -31,6 +32,9 @@ def func(backbone_size):
     print("head_out_shape: ", y.shape)
 
 
-model_dic = ResNet().resnet_sizes
+model_dic = RepVGG().regvgg_size
 for model_size in model_dic.keys():
     func(model_size)
+
+
+

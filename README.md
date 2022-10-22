@@ -20,9 +20,9 @@
 |    ✅     | cspdarknet |            n、s、m、l、x            |        | 1003 |
 |    ✅     |   resnet   | res18、res34、res50、res101、res152 |        | 1010 |
 |          |    vgg     |                                     |        |      |
-|          |  connext   |                                     |        |      |
+|          |  convnext  |                                     |        |      |
 |          |    vit     |                                     |        |      |
-|          |   repVGG   |                                     |        |      |
+|   ✅     |   repVGG   |                                     |        |      |
 
 
 

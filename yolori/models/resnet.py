@@ -48,17 +48,18 @@ class Bottleneck(nn.Module):
         super(Bottleneck, self).__init__()
         self.act = get_activation(act)
         self.conv1 = nn.Conv2d(
-            in_channels, out_channels//self.expansion, kernel_size=1, bias=False
+            in_channels, out_channels // self.expansion, kernel_size=1, bias=False
         )
-        self.bn1 = nn.BatchNorm2d(out_channels//self.expansion)
+        self.bn1 = nn.BatchNorm2d(out_channels // self.expansion)
 
         self.conv2 = nn.Conv2d(
-            out_channels//self.expansion, out_channels//self.expansion, kernel_size=3, stride=stride, padding=1, bias=False
+            out_channels // self.expansion, out_channels // self.expansion, kernel_size=3, stride=stride, padding=1,
+            bias=False
         )
-        self.bn2 = nn.BatchNorm2d(out_channels//self.expansion)
+        self.bn2 = nn.BatchNorm2d(out_channels // self.expansion)
 
         self.conv3 = nn.Conv2d(
-            out_channels//self.expansion, out_channels, kernel_size=1, bias=False
+            out_channels // self.expansion, out_channels, kernel_size=1, bias=False
         )
         self.bn3 = nn.BatchNorm2d(out_channels)
         self.downsample = nn.Sequential()
@@ -81,19 +82,20 @@ class Bottleneck(nn.Module):
 
 class ResNet(nn.Module):
     resnet_sizes = {
-        "res18": [[64, 64, 128, 256, 512], [2, 2, 2, 2]],
-        "res34": [[64, 64, 128, 256, 512], [3, 4, 6, 3]],
-        "res50": [[64, 256, 512, 1024, 2048], [3, 4, 6, 3]],
-        "res101": [[64, 256, 512, 1024, 2048], [3, 4, 23, 3]],
-        "res152": [[64, 256, 512, 1024, 2048], [3, 8, 36, 3]],
+        "res18": {"width": [64, 64, 128, 256, 512], "blocks": [2, 2, 2, 2]},
+        "res34": {"width": [64, 64, 128, 256, 512], "blocks": [3, 4, 6, 3]},
+        "res50": {"width": [64, 256, 512, 1024, 2048], "blocks": [3, 4, 6, 3]},
+        "res101": {"width": [64, 256, 512, 1024, 2048], "blocks": [3, 4, 23, 3]},
+        "res152": {"width": [64, 256, 512, 1024, 2048], "blocks": [3, 8, 36, 3]},
     }
 
-    def __init__(self, model_size="res18", out_features=('stage3', 'stage4','stage5'),in_channels=3, act="relu"):
+    def __init__(self, model_size="res18", out_features=('stage3', 'stage4', 'stage5'), in_channels=3, act="relu"):
         super(ResNet, self).__init__()
         assert model_size in self.resnet_sizes.keys(), "please select correct model_size from {}".format(
             self.resnet_sizes.keys())
         self.out_features = out_features
-        layer_out_channels, layer_num_blocks = self.resnet_sizes[model_size]
+        model = self.resnet_sizes[model_size]
+        layer_out_channels, layer_num_blocks = model["width"], model["blocks"]
         self.act = act
         self.in_channels = layer_out_channels[0]
         self.stem = nn.Sequential(
@@ -143,4 +145,3 @@ class ResNet(nn.Module):
         # out = x.view(x.size(0), -1)
         # out = self.linear(out)
         return {k: v for k, v in outputs.items() if k in self.out_features}
-

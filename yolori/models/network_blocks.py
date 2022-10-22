@@ -251,35 +251,39 @@ class RepVGGBlock(nn.Module):
 
         padding_11 = padding - kernel_size // 2
 
-        self.act = get_activation(name=act)
+        self.nonlinearity = get_activation(name=act)
 
         if use_se:
-            self.se = SEBlock(out_channels, internal_neurons=out_channels // 16, act=act)
+            #   Note that RepVGG-D2se uses SE before nonlinearity. But RepVGGplus models uses SE after nonlinearity.
+            self.se = SEBlock(out_channels, internal_neurons=out_channels // 16)
         else:
             self.se = nn.Identity()
 
         if deploy:
             self.rbr_reparam = nn.Conv2d(in_channels=in_channels, out_channels=out_channels, kernel_size=kernel_size,
-                                         stride=stride, padding=padding, dilation=dilation, groups=groups, bias=True,
+                                         stride=stride,
+                                         padding=padding, dilation=dilation, groups=groups, bias=True,
                                          padding_mode=padding_mode)
+
         else:
-            self.rbr_identity = nn.BatchNorm2d(in_channels) if out_channels == in_channels and stride == 1 else None
+            self.rbr_identity = nn.BatchNorm2d(
+                num_features=in_channels) if out_channels == in_channels and stride == 1 else None
             self.rbr_dense = conv_bn(in_channels=in_channels, out_channels=out_channels, kernel_size=kernel_size,
                                      stride=stride, padding=padding, groups=groups)
             self.rbr_1x1 = conv_bn(in_channels=in_channels, out_channels=out_channels, kernel_size=1, stride=stride,
                                    padding=padding_11, groups=groups)
-            print('RepVGG Block, identity = ', self.rbr_identity)
+            # print('RepVGG Block, identity = ', self.rbr_identity)
 
     def forward(self, inputs):
-        if hasattr(self, "rbr_reparam"):
-            return self.act(self.se(self.rbr_reparam(inputs)))
+        if hasattr(self, 'rbr_reparam'):
+            return self.nonlinearity(self.se(self.rbr_reparam(inputs)))
 
         if self.rbr_identity is None:
             id_out = 0
         else:
             id_out = self.rbr_identity(inputs)
 
-        return self.act(self.se(self.rbr_identity(inputs)) + self.rbr_1x1(inputs) + id_out)
+        return self.nonlinearity(self.se(self.rbr_dense(inputs) + self.rbr_1x1(inputs) + id_out))
 
     #   Optional. This may improve the accuracy and facilitates quantization in some cases.
     #   1.  Cancel the original weight decay on rbr_dense.conv.weight and rbr_1x1.conv.weight.

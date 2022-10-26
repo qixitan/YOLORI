@@ -109,12 +109,11 @@ users 命令：显示当前当登录的用户的用户名
 pip install --upgrade setuptools==56.1.0
 ```
 
-
-
-2、[shell 找不到包](https://blog.csdn.net/pengchengliu/article/details/117752340?utm_term=linux%E8%BF%90%E8%A1%8Cpython%E4%BB%A3%E7%A0%81%E6%89%BE%E4%B8%8D%E5%88%B0%E5%8C%85&utm_medium=distribute.pc_aggpage_search_result.none-task-blog-2~all~sobaiduweb~default-2-117752340&spm=3001.4430)，在Terminal执行以下命令
+2、找不到yolori包
 
 ```shell
-export PYTHONPATH=/path/to/project
+cd YOLORI-base-v1 
+python setup.py develop
 ```
 
 # 模型结构

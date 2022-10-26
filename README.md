@@ -8,7 +8,7 @@
 | 1007 |           Trainer类           |             Trainer实现每个定义好的exp的训练过程             |    ✅     |
 | 1014 |              DDP              |                       实现单机多卡训练                       |    ✅     |
 | 1015 |   测试基于DIOR&nano版本代码   | 1007下午被挤掉 1008重新开始 任务内容记录在train_log.txt，目前已完成train和val |    ✅     |
-| 1020 |     1、shell运行 2、TOOD      |                1、可以直接使用命令行运行代码                 |          |
+| 1020 |         1、shell运行          |                1、可以直接使用命令行运行代码                 |    ✅     |
 
 # 计划module
 
@@ -22,7 +22,7 @@
 |          |    vgg     |                                     |        |      |
 |          |  convnext  |                                     |        |      |
 |          |    vit     |                                     |        |      |
-|   ✅     |   repVGG   |                                     |        |      |
+|   ✅     |   repVGG   |                                     |        | 1021 |
 
 
 
@@ -30,11 +30,12 @@
 
 本项目中实现的neck中的涉及到的每个layer的block数目都默认与backbone中第层中的block数目相同
 
-| Progress | model | Detail | Time |
-| :------: | :---: | :----: | :--: |
-|    ✅     |  FPN  |        | 1003 |
-|    ✅     |  PAN  |        | 1003 |
-|          | CABM  |        |      |
+| Progress |                            model                             |      Detail       | Time |
+| :------: | :----------------------------------------------------------: | :---------------: | :--: |
+|    ✅     |                             FPN                              |                   | 1003 |
+|    ✅     |                             PAN                              |                   | 1003 |
+|    ✅     |                             SCA                              |  自己使用的模块   | 1024 |
+|    ✅     | [ASFF](https://click.endnote.com/viewer?doi=10.48550%2Farxiv.1911.09516&token=WzM0MDI0NjUsIjEwLjQ4NTUwL2FyeGl2LjE5MTEuMDk1MTYiXQ.abCZpFILssJmEMgwK2wYLBnvoBw): [code](https://blog.csdn.net/weixin_45679938/article/details/122354725) | [模型结构](#ASFF) |      |
 
 ### Head
 
@@ -116,3 +117,6 @@ pip install --upgrade setuptools==56.1.0
 export PYTHONPATH=/path/to/project
 ```
 
+# 模型结构
+
+## ASFF![](README.assets/ASFF.png)

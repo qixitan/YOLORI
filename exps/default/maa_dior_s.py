@@ -4,7 +4,7 @@
 
 import os
 
-from yolori.exp import YoloX_Dior_Exp as MyExp
+from yolori.exp import MAA_Dior_Exp as MyExp
 
 
 class Exp(MyExp):

@@ -17,6 +17,8 @@ from .resnet import ResNet
 from .repvgg import RepVGG
 
 # neck
+from .yolo_maa import MAA
+from .asff import ASFF
 
 # head
 

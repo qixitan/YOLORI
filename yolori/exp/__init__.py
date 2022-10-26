@@ -5,4 +5,7 @@
 from .base_exp import BaseExp
 from .build import get_exp
 from .yolox_base import Exp
-from .yolox_dior_base import Exp_Dior
+from .yolox_dior_base import YoloX_Dior_Exp
+from .maa_dior_base import MAA_Dior_Exp
+from .asff_dior_base import ASFF_Dior_Exp
+

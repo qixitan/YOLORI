@@ -30,7 +30,7 @@ class Darknet(nn.Module):
         assert out_features, "please provide output features of Darknet"
         self.out_features = out_features
         self.stem = nn.Sequential(
-            BaseConv(in_channels, stem_out_channels, ksize=3, stride=1, act="lrelu"),
+            BaseConv(in_channels, stem_out_channels, kernel_size=3, stride=1, act="lrelu"),
             *self.make_group_layer(stem_out_channels, num_blocks=1, stride=2),
         )
         in_channels = stem_out_channels * 2  # 64
@@ -59,7 +59,7 @@ class Darknet(nn.Module):
     def make_group_layer(self, in_channels: int, num_blocks: int, stride: int = 1):
         "starts with conv layer then has `num_blocks` `ResLayer`"
         return [
-            BaseConv(in_channels, in_channels * 2, ksize=3, stride=stride, act="lrelu"),
+            BaseConv(in_channels, in_channels * 2, kernel_size=3, stride=stride, act="lrelu"),
             *[(ResLayer(in_channels * 2)) for _ in range(num_blocks)],
         ]
 
@@ -112,7 +112,7 @@ class CSPDarknet(nn.Module):
         base_depth = max(round(dep_mul * 3), 1)  # 3
 
         # stem
-        self.stem = Focus(3, base_channels, ksize=3, act=act)
+        self.stem = Focus(3, base_channels, kernel_size=3, act=act)
 
         # dark2
         self.dark2 = nn.Sequential(

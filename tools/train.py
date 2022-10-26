@@ -25,7 +25,7 @@ def make_parser():
     parser.add_argument("-b", "--batch-size", type=int, default=256, help="batch size")
     parser.add_argument("-d", "--devices", default=4, type=int, help="device for training")
 
-    parser.add_argument("-r", "--resume", default=False, action="store_true", help="resume training")
+    parser.add_argument("-r", "--resume", action="store_true", help="resume training")
     parser.add_argument("-c", "--ckpt", default=None, type=str, help="checkpoint file")
     parser.add_argument("-e", "--start_epoch", default=None, type=int, help="resume training start epoch", )
 

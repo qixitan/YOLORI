@@ -144,7 +144,7 @@ def _mirror(image, boxes, prob=0.5):
     return image, boxes
 
 
-def _mirror1(image, boxes, prob=0.5):
+def _flip(image, boxes, prob=0.5):
     # 上下翻转
     height, _, _ = image.shape
     if random.random() < prob:

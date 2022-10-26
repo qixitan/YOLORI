@@ -49,7 +49,7 @@ class YOLOXHead(nn.Module):
                 BaseConv(
                     in_channels=int(in_channels[i] * width),
                     out_channels=int(256 * width),
-                    ksize=1,
+                    kernel_size=1,
                     stride=1,
                     act=act,
                 )
@@ -60,14 +60,14 @@ class YOLOXHead(nn.Module):
                         Conv(
                             in_channels=int(256 * width),
                             out_channels=int(256 * width),
-                            ksize=3,
+                            kernel_size=3,
                             stride=1,
                             act=act,
                         ),
                         Conv(
                             in_channels=int(256 * width),
                             out_channels=int(256 * width),
-                            ksize=3,
+                            kernel_size=3,
                             stride=1,
                             act=act,
                         ),
@@ -80,14 +80,14 @@ class YOLOXHead(nn.Module):
                         Conv(
                             in_channels=int(256 * width),
                             out_channels=int(256 * width),
-                            ksize=3,
+                            kernel_size=3,
                             stride=1,
                             act=act,
                         ),
                         Conv(
                             in_channels=int(256 * width),
                             out_channels=int(256 * width),
-                            ksize=3,
+                            kernel_size=3,
                             stride=1,
                             act=act,
                         ),
@@ -714,7 +714,7 @@ class YOLOXHeadN(nn.Module):
                 BaseConv(
                     in_channels=int(in_channels[i] * width),
                     out_channels=int(256 * width),
-                    ksize=1,
+                    kernel_size=1,
                     stride=1,
                     act=act,
                 )
@@ -725,14 +725,14 @@ class YOLOXHeadN(nn.Module):
                         Conv(
                             in_channels=int(256 * width),
                             out_channels=int(256 * width),
-                            ksize=3,
+                            kernel_size=3,
                             stride=1,
                             act=act,
                         ),
                         Conv(
                             in_channels=int(256 * width),
                             out_channels=int(256 * width),
-                            ksize=3,
+                            kernel_size=3,
                             stride=1,
                             act=act,
                         ),
@@ -745,14 +745,14 @@ class YOLOXHeadN(nn.Module):
                         Conv(
                             in_channels=int(256 * width),
                             out_channels=int(256 * width),
-                            ksize=3,
+                            kernel_size=3,
                             stride=1,
                             act=act,
                         ),
                         Conv(
                             in_channels=int(256 * width),
                             out_channels=int(256 * width),
-                            ksize=3,
+                            kernel_size=3,
                             stride=1,
                             act=act,
                         ),

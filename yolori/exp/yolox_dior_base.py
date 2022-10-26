@@ -13,9 +13,9 @@ from torch import nn
 from .base_exp import BaseExp
 
 
-class Exp_Dior(BaseExp):
+class YoloX_Dior_Exp(BaseExp):
     def __init__(self):
-        super(Exp_Dior, self).__init__()
+        super(YoloX_Dior_Exp, self).__init__()
 
         # ---------------- model config ---------------- #
         self.num_classes = 20
@@ -25,7 +25,7 @@ class Exp_Dior(BaseExp):
 
         # ---------------- dataloader config ---------------- #
         # set the worker(4) for shorter dataloader init time
-        self.data_num_workers = 1
+        self.data_num_workers = 2
         self.input_size = (800, 800)  # (height, width)
         # Actual multiscale ranges: [640-5*32, 640+5*32].
         # To disable multiscale training, set the

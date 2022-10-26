@@ -31,15 +31,15 @@ class BaseConv(nn.Module):
     """A Conv2d -> Batchnorm -> silu/leaky relu block"""
 
     def __init__(
-        self, in_channels, out_channels, ksize, stride, groups=1, bias=False, act="silu"
+        self, in_channels, out_channels, kernel_size, stride, groups=1, bias=False, act="silu"
     ):
         super().__init__()
         # same padding
-        pad = (ksize - 1) // 2
+        pad = (kernel_size - 1) // 2
         self.conv = nn.Conv2d(
             in_channels,
             out_channels,
-            kernel_size=ksize,
+            kernel_size=kernel_size,
             stride=stride,
             padding=pad,
             groups=groups,
@@ -58,18 +58,18 @@ class BaseConv(nn.Module):
 class DWConv(nn.Module):
     """Depthwise Conv + Conv"""
 
-    def __init__(self, in_channels, out_channels, ksize, stride=1, act="silu"):
+    def __init__(self, in_channels, out_channels, kernel_size, stride=1, act="silu"):
         super().__init__()
         self.dconv = BaseConv(
             in_channels,
             in_channels,
-            ksize=ksize,
+            kernel_size=kernel_size,
             stride=stride,
             groups=in_channels,
             act=act,
         )
         self.pconv = BaseConv(
-            in_channels, out_channels, ksize=1, stride=1, groups=1, act=act
+            in_channels, out_channels, kernel_size=1, stride=1, groups=1, act=act
         )
 
     def forward(self, x):
@@ -109,10 +109,10 @@ class ResLayer(nn.Module):
         super().__init__()
         mid_channels = in_channels // 2
         self.layer1 = BaseConv(
-            in_channels, mid_channels, ksize=1, stride=1, act="lrelu"
+            in_channels, mid_channels, kernel_size=1, stride=1, act="lrelu"
         )
         self.layer2 = BaseConv(
-            mid_channels, in_channels, ksize=3, stride=1, act="lrelu"
+            mid_channels, in_channels, kernel_size=3, stride=1, act="lrelu"
         )
 
     def forward(self, x):
@@ -189,9 +189,9 @@ class CSPLayer(nn.Module):
 class Focus(nn.Module):
     """Focus width and height information into channel space."""
 
-    def __init__(self, in_channels, out_channels, ksize=1, stride=1, act="silu"):
+    def __init__(self, in_channels, out_channels, kernel_size=1, stride=1, act="silu"):
         super().__init__()
-        self.conv = BaseConv(in_channels * 4, out_channels, ksize, stride, act=act)
+        self.conv = BaseConv(in_channels * 4, out_channels, kernel_size, stride, act=act)
 
     def forward(self, x):
         # shape of x (b,c,w,h) -> y(b,4c,w/2,h/2)
@@ -209,6 +209,52 @@ class Focus(nn.Module):
             dim=1,
         )
         return self.conv(x)
+
+
+class SCA(nn.Module):
+    """
+    Self-Channels Attention
+    """
+    def __init__(self, in_channels, mode="embedded_gaussian"):
+        super(SCA, self).__init__()
+        assert mode in ['embedded_gaussian', 'dot_product']
+        self.inplanes = in_channels
+        self.mode = mode
+        self.hiden_planes = in_channels//2
+        self.phi_x = nn.Conv2d(self.inplanes, self.hiden_planes, kernel_size=1, stride=1, padding=0, bias=False)
+        self.theta_x = nn.Conv2d(self.inplanes, self.hiden_planes, kernel_size=1, stride=1, padding=0, bias=False)
+        self.g_x = nn.Conv2d(self.inplanes, self.hiden_planes, kernel_size=1, stride=1, padding=0, bias=False)
+        self.softmax = nn.Softmax(dim=1)
+        self.out = nn.Conv2d(self.hiden_planes, in_channels, kernel_size=1, stride=1, padding=0, bias=False)
+
+    def embedded_gaussian(self, theta_x, phi_x):
+        # pairwise_weight: [N, HxW, HxW]
+        pairwise_weight = torch.matmul(theta_x, phi_x)
+        pairwise_weight /= theta_x.shape[-1] ** -0.5
+        pairwise_weight = pairwise_weight.softmax(dim=-1)
+        return pairwise_weight
+
+    def dot_product(self, theta_x, phi_x):
+        # pairwise_weight: [N, HxW, HxW]
+        pairwise_weight = torch.matmul(theta_x, phi_x)
+        pairwise_weight /= pairwise_weight.shape[-1]
+        return pairwise_weight
+
+    def forward(self, x):
+        b, _, h, w = x.size()
+        phi_x = self.phi_x(x).view(b, self.hiden_planes, -1)
+        theta_x = self.theta_x(x).view(b, self.hiden_planes, -1).permute(0, 2, 1).contiguous()
+        g_x = self.g_x(x).view(b, self.hiden_planes, -1).permute(0, 2, 1).contiguous()
+
+        if self.mode == 'embedded_gaussian':
+            pairwise_weight = self.embedded_gaussian(theta_x, phi_x)
+        else:
+            pairwise_weight = self.dot_product(theta_x, phi_x)
+        y = torch.matmul(pairwise_weight, g_x)
+        y = y.permute(0, 2, 1).reshape(b, self.hiden_planes, h, w).contiguous()
+        out = x + self.out(y)
+        return out
+
 
 
 class SEBlock(nn.Module):

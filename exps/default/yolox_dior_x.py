@@ -3,9 +3,8 @@
 # Copyright (c) 2014-2021 Megvii Inc. All rights reserved.
 
 import os
-from torch import nn
 
-from yolori.exp import Exp_Dior as MyExp
+from yolori.exp import YoloX_Dior_Exp as MyExp
 
 
 class Exp(MyExp):

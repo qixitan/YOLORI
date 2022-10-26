@@ -2,21 +2,17 @@
 # -*- coding:utf-8 -*-
 # Copyright (c) 2014-2021 Megvii Inc. All rights reserved.
 
-import os
 from torch import nn
 
-from yolori.exp import Exp_Dior as MyExp
+from .yolox_dior_base import YoloX_Dior_Exp as BaseExp
 
 
-class Exp(MyExp):
+class MAA_Dior_Exp(BaseExp):
     def __init__(self):
-        super(Exp, self).__init__()
-        self.depth = 0.33
-        self.width = 0.25
-        self.exp_name = os.path.split(os.path.realpath(__file__))[1].split(".")[0]
+        super(MAA_Dior_Exp, self).__init__()
 
     def get_model(self):
-        from yolori.models import YOLOX, YOLOPAFPN, YOLOXHead
+        from yolori.models import YOLOX, MAA, YOLOXHeadN
 
         def init_yolo(M):
             for m in M.modules():
@@ -26,10 +22,12 @@ class Exp(MyExp):
 
         if getattr(self, "model", None) is None:
             in_channels = [256, 512, 1024]
-            backbone = YOLOPAFPN(self.depth, self.width, in_channels=in_channels, act=self.act)
-            head = YOLOXHead(self.num_classes, self.width, in_channels=in_channels, act=self.act)
+            backbone = MAA(self.depth, self.width, in_channels=in_channels, act=self.act)
+            head = YOLOXHeadN(self.num_classes, self.width, in_channels=in_channels, act=self.act)
             self.model = YOLOX(backbone, head)
 
         self.model.apply(init_yolo)
         self.model.head.initialize_biases(1e-2)
         return self.model
+
+

@@ -72,10 +72,11 @@ class Trainer:
             mode="a",
         )
     def get_file_name(self):
-        if self.args.resume:
+        if self.args.resume and max(os.listdir(os.path.join(self.exp.output_dir, self.args.experiment_name))) is not None:
             return os.path.join(self.exp.output_dir, self.args.experiment_name,
                                 max(os.listdir(os.path.join(self.exp.output_dir, self.args.experiment_name))))
         else:
+            self.args.resume = False
             return os.path.join(self.exp.output_dir, self.args.experiment_name, self.exp.time)
 
     def train(self):
@@ -328,8 +329,8 @@ class Trainer:
         )
         self.model.train()
         if self.rank == 0:
-            self.tblogger.add_scalar("val/COCOAP50", ap50, self.epoch + 1)
-            self.tblogger.add_scalar("val/COCOAP50_95", ap50_95, self.epoch + 1)
+            self.tblogger.add_scalar("val/AP50", ap50, self.epoch + 1)
+            self.tblogger.add_scalar("val/AP50_95", ap50_95, self.epoch + 1)
             logger.info("\n" + summary)
         synchronize()
 

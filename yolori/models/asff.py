@@ -11,7 +11,7 @@ from .network_blocks import BaseConv
 
 class ASFF(nn.Module):
     def __init__(self, depth=1.0, width=1.0, out_features=("dark3", "dark4", "dark5"), in_channels=[256, 512, 1024],
-                 depthwise=False, rfb=False, vis=False, act="leakyrelu"):
+                 depthwise=False, rfb=False, vis=False, act="lrelu"):
         super(ASFF, self).__init__()
         self.backbone = CSPDarknet(depth, width, depthwise=depthwise, act=act)
         self.in_channels = [int(x * width) for x in in_channels[-len(out_features):]]
@@ -37,10 +37,11 @@ class ASFF(nn.Module):
                                          kernel_size=1, stride=1, act=act)
         self.stride_level_4_3 = BaseConv(in_channels=self.in_channels[0], out_channels=self.in_channels[1],
                                          kernel_size=1, stride=2, act=act)
-        self.weight_level_4 = BaseConv(compress_c * 3, 3, 1, 1, act=act)
         self.weight_level_4_5 = BaseConv(self.in_channels[1], compress_c, 1, 1, act=act)
         self.weight_level_4_4 = BaseConv(self.in_channels[1], compress_c, 1, 1, act=act)
         self.weight_level_4_3 = BaseConv(self.in_channels[1], compress_c, 1, 1, act=act)
+
+        self.weight_level_4 = BaseConv(compress_c * 3, 3, 1, 1, act=act)
         self.expend_4 = BaseConv(self.in_channels[1], self.in_channels[1], kernel_size=3, stride=1, act=act)
 
         # dark3
@@ -69,6 +70,7 @@ class ASFF(nn.Module):
         asff_out3 = x3_3 * level_weight_3[:, 0:1, :, :] + \
                     x4_3 * level_weight_3[:, 1:2, :, :] + \
                     x5_3 * level_weight_3[:, 2:, :, :]
+        asff_out3 = self.expend_3(asff_out3)
 
         x5_4 = F.interpolate(self.stride_level_4_5(x5), scale_factor=2, mode="nearest")
         x4_4 = x4
@@ -79,6 +81,7 @@ class ASFF(nn.Module):
         asff_out4 = x3_4 * level_weight_4[:, 0:1, :, :] + \
                     x4_4 * level_weight_4[:, 1:2, :, :] + \
                     x5_4 * level_weight_4[:, 2:, :, :]
+        asff_out4 = self.expend_4(asff_out4)
 
         x5_5 = x5
         x4_5 = self.stride_level_5_4(x4)
@@ -89,5 +92,6 @@ class ASFF(nn.Module):
         asff_out5 = x3_5 * level_weight_5[:, 0:1, :, :] + \
                     x4_5 * level_weight_5[:, 1:2, :, :] + \
                     x5_5 * level_weight_5[:, 2:, :, :]
+        asff_out5 = self.expend_5(asff_out5)
 
         return (asff_out3, asff_out4, asff_out5)

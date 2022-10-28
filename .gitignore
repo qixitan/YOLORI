@@ -4,3 +4,8 @@ docs/*
 assets/*
 demo/*
 exp_outputs/*
+
+./test/*
+
+*/as_mma*
+*/maa*

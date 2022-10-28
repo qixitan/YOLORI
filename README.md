@@ -57,7 +57,7 @@
 | :------: | :----: | :--------: | :--: |
 |          |  CAM   | 模型可视化 |      |
 
-# 常用远程工具
+# 常用工具
 
 查看端口是否被占用使用 `netstat` 命令 
 
@@ -90,6 +90,14 @@ tensorboard --logdir=xxx --port=6006
 ```shell
 pkill -kill -t pts/x
 ```
+
+**git：**
+
+```shell
+git rm --cached file  # 删除缓存的wen'jia
+```
+
+
 
 ## 查询命令
 

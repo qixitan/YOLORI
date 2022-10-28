@@ -19,7 +19,7 @@ def get_activation(name: str = 'relu'):
     act_dic = {
         "relu": nn.ReLU(inplace=True),
         'silu': nn.SiLU(inplace=True),
-        "leakyrelu": nn.LeakyReLU(0.1, inplace=True),
+        "lrelu": nn.LeakyReLU(0.1, inplace=True),
         "selu": nn.SELU(inplace=True),
         "gelu": nn.GELU(),
     }

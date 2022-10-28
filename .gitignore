@@ -7,5 +7,5 @@ exp_outputs/*
 
 ./test/*
 
-*/as_mma*
-*/maa*
+*as_mma*
+*maa*

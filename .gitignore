@@ -5,7 +5,7 @@ assets/*
 demo/*
 exp_outputs/*
 
-./test/*
+test/*
 
 *as_mma*
 *maa*

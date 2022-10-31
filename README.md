@@ -8,7 +8,8 @@
 | 1007 |           Trainer类           |             Trainer实现每个定义好的exp的训练过程             |    ✅     |
 | 1014 |              DDP              |                       实现单机多卡训练                       |    ✅     |
 | 1015 |   测试基于DIOR&nano版本代码   | 1007下午被挤掉 1008重新开始 任务内容记录在train_log.txt，目前已完成train和val |    ✅     |
-| 1020 |         1、shell运行          |                1、可以直接使用命令行运行代码                 |    ✅     |
+| 1020 |           shell运行           |                  可以直接使用命令行运行代码                  |    ✅     |
+| 1028 |              vit              |                                                              |          |
 
 # 计划module
 
@@ -57,11 +58,23 @@
 | :------: | :----: | :--------: | :--: |
 |          |  CAM   | 模型可视化 |      |
 
-# 常用工具
+## 常用命令
 
-查看端口是否被占用使用 `netstat` 命令 
+##### Linux
 
-visdom远程使用指南
+```shell
+w：# 显示登录的用户及其当前执行的任务
+
+last：# 显示当前与过去登录系统的用户的信息
+
+who：# 显示当前当登录的用户的信息
+
+users：# 显示当前当登录的用户的用户名
+
+netstat # 端口占用
+```
+
+##### **visdom远程使用指南**
 
 ```shell
 # 1、ssh重定向到本地
@@ -72,7 +85,7 @@ python -m visdom.server -p 使用端口号
 http://localhost:18097
 ```
 
-[tensorboard远程](https://blog.csdn.net/weixin_35653315/article/details/71327740)
+##### [tensorboard远程](https://blog.csdn.net/weixin_35653315/article/details/71327740)
 
 ```shell
 # 1、ssh重定向到本地
@@ -85,29 +98,13 @@ tensorboard --logdir=xxx --port=6006
 127.0.0.1:16006
 ```
 
-断开ssh连接
+##### [git](https://www.jianshu.com/p/3c35c3ecca7b)
 
 ```shell
-pkill -kill -t pts/x
-```
-
-**git：**
-
-```shell
-git rm --cached file  # 删除缓存的wen'jia
+git rm --cached file  # 删除缓存  ----加入.gitignore
 ```
 
 
-
-## 查询命令
-
-w 命令：显示登录的用户及其当前执行的任务
-
-last 命令：显示当前与过去登录系统的用户的信息
-
-who 命令：显示当前当登录的用户的信息
-
-users 命令：显示当前当登录的用户的用户名
 
 # 报错
 

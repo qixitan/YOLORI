@@ -71,6 +71,7 @@ class Trainer:
             filename="train_log.txt",
             mode="a",
         )
+
     def get_file_name(self):
         if self.args.resume and max(os.listdir(os.path.join(self.exp.output_dir, self.args.experiment_name))) is not None:
             return os.path.join(self.exp.output_dir, self.args.experiment_name,

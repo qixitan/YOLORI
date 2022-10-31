@@ -14,16 +14,16 @@ from yolori.core import Trainer, launch
 from yolori.exp import get_exp
 from yolori.utils import configure_nccl, configure_omp, get_num_devices
 
-# import os
+import os
 # os.environ["CUDA_VISIBLE_DEVICES"] = "0, 1, 2, 3"
-# os.environ["CUDA_VISIBLE_DEVICES"] = "0, 1, 2, 3, 4, 5"
+os.environ["CUDA_VISIBLE_DEVICES"] = "5"
 
 def make_parser():
     parser = argparse.ArgumentParser("YOLORI train parser")
     parser.add_argument("-expn", "--experiment-name", type=str, default=None)
     parser.add_argument("-n", "--name", type=str, default="asff_dior_n",  help="model name")
-    parser.add_argument("-b", "--batch-size", type=int, default=8, help="batch size")
-    parser.add_argument("-d", "--devices", default=4, type=int, help="device for training")
+    parser.add_argument("-b", "--batch-size", type=int, default=2, help="batch size")
+    parser.add_argument("-d", "--devices", default=1, type=int, help="device for training")
 
     parser.add_argument("-r", "--resume", action="store_true", help="resume training")
     parser.add_argument("-c", "--ckpt", default=None, type=str, help="checkpoint file")

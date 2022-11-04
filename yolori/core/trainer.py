@@ -307,7 +307,8 @@ class Trainer:
                     self.args.resume, self.start_epoch
                 )
             )  # noqa
-            self.best_ap = ckpt["best_ap"]
+            if "best_ap" in ckpt.keys():
+                self.best_ap = ckpt["best_ap"]
         else:
             if self.args.ckpt is not None:
                 logger.info("loading checkpoint for fine tuning")

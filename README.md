@@ -10,8 +10,9 @@
 | 1015 |   测试基于DIOR&nano版本代码   | 1007下午被挤掉 1008重新开始 任务内容记录在train_log.txt，目前已完成train和val |    ✅     |
 | 1020 |           shell运行           |                  可以直接使用命令行运行代码                  |    ✅     |
 | 1028 |              vit              |                                                              |          |
+| 1104 |              CAM              |                      生成yolox的热力图                       |    ✅     |
 
-# 计划module
+# Plan
 
 ### Backbone
 
@@ -54,27 +55,38 @@
 
 ## Demo
 
-| Progress | 任务项 |   Detail   | Time |
-| :------: | :----: | :--------: | :--: |
-|          |  CAM   | 模型可视化 |      |
+| Progress | 任务项 |     Detail     | Time |
+| :------: | :----: | :------------: | :--: |
+|    ✅     |  CAM   | 就行模型可视化 | 1104 |
 
-## 常用命令
+# start
+
+```shell
+# install
+python setup.py develop
+
+# train
+python yolori.tools.train -n asff_dior_n -b 256 -o --cache 
+
+# get cam 
+python yolori.tools.eigercam.py -n asff_dior_n -i ../imgs/21212.jpg  # save cam in ../imgs default
+```
+
+
+
+## Other
 
 ##### Linux
 
 ```shell
 w：# 显示登录的用户及其当前执行的任务
-
-last：# 显示当前与过去登录系统的用户的信息
-
 who：# 显示当前当登录的用户的信息
-
+last：# 显示当前与过去登录系统的用户的信息
 users：# 显示当前当登录的用户的用户名
-
 netstat # 端口占用
 ```
 
-##### **visdom远程使用指南**
+##### **visdom**
 
 ```shell
 # 1、ssh重定向到本地
@@ -85,7 +97,7 @@ python -m visdom.server -p 使用端口号
 http://localhost:18097
 ```
 
-##### [tensorboard远程](https://blog.csdn.net/weixin_35653315/article/details/71327740)
+##### [tensorboard](https://blog.csdn.net/weixin_35653315/article/details/71327740)
 
 ```shell
 # 1、ssh重定向到本地
@@ -101,12 +113,12 @@ tensorboard --logdir=xxx --port=6006
 ##### [git](https://www.jianshu.com/p/3c35c3ecca7b)
 
 ```shell
-git rm --cached file  # 删除缓存  ----加入.gitignore
+git rm --cached file  # delete cached  ----.gitignore
 ```
 
 
 
-# 报错
+# error
 
 1、AttributeError:module ‘distutils’ has no attribute 'version’
 
@@ -114,13 +126,13 @@ git rm --cached file  # 删除缓存  ----加入.gitignore
 pip install --upgrade setuptools==56.1.0
 ```
 
-2、找不到yolori包
+2、can't find 'yolori' module
 
 ```shell
 cd YOLORI-base-v1 
 python setup.py develop
 ```
 
-# 模型结构
+# model framework
 
 ## ASFF![](README.assets/ASFF.png)

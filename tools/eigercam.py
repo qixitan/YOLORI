@@ -22,9 +22,10 @@ from yolori.exp import get_exp
 
 def make_parser():
     parser = argparse.ArgumentParser("YOLORI cam parser")
-    parser.add_argument("-n", "--name", type=str, default="yolox_dior_n", help="model name")
-    parser.add_argument("-i", "--imgpath", type=str, default="../imgs/01799.jpg", help="image path")
+    parser.add_argument("-n", "--name", type=str, default="maa_dior_s", help="model name")
+    parser.add_argument("-i", "--imgpath", type=str, default="../imgs/21212.jpg", help="image path")
     parser.add_argument("-d", "--device", type=str, default="cpu", help="device for cam")
+    parser.add_argument("-s", "--savecam", default=True, type=bool, help="save cam images")
     parser.add_argument("-c", "--ckpt", default=None, type=str, help="checkpoint file")
     return parser
 
@@ -62,7 +63,8 @@ def main(exp, args):
     grayscale_cam = cam(tensor)[0, :, :]
     cam_image = show_cam_on_image(img, grayscale_cam, use_rgb=True)
     x2 = Image.fromarray(cam_image)
-    x2.save(img_path.replace(".jpg", "_EigenCam_{}.jpg").format(args.name))
+    if args.savecam:
+        x2.save(img_path.replace(".jpg", "_EigenCam_{}.jpg").format(args.name))
 
 
 if __name__ == '__main__':

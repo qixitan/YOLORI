@@ -5,7 +5,7 @@
 | 1003 | 构建backbone、neck、yoloxhead | 修正完成backbone、neck、yoloxhead的model_size输出，并构建完成建立模型的过程，yoloxhead中包括了yolox loss计算，backbone包括darknet、cspdarknet，head主要包括了两种解耦方式的检测头 |    ✅     |
 | 1004 |            完成exp            |           构建每个训练任务的模板，包括数据，模型等           |    ✅     |
 | 1005 | 修正fpn为输入输出的通道数相同 |  均使用相同的model_size参数同一构建backbone、neck、head模块  |    ✅     |
-| 1007 |           Trainer类           |             Trainer实现每个定义好的exp的训练过程             |    ✅     |
+| 1007 |           Trainer类           |                实现每个定义好的exp的训练过程                 |    ✅     |
 | 1014 |              DDP              |                       实现单机多卡训练                       |    ✅     |
 | 1015 |   测试基于DIOR&nano版本代码   | 1007下午被挤掉 1008重新开始 任务内容记录在train_log.txt，目前已完成train和val |    ✅     |
 | 1020 |           shell运行           |                  可以直接使用命令行运行代码                  |    ✅     |

@@ -307,6 +307,7 @@ class Trainer:
                     self.args.resume, self.start_epoch
                 )
             )  # noqa
+            self.best_ap = ckpt["best_ap"]
         else:
             if self.args.ckpt is not None:
                 logger.info("loading checkpoint for fine tuning")
@@ -346,6 +347,7 @@ class Trainer:
                 "start_epoch": self.epoch + 1,
                 "model": save_model.state_dict(),
                 "optimizer": self.optimizer.state_dict(),
+                "best_ap": self.best_ap,
             }
             save_checkpoint(
                 ckpt_state,

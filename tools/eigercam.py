@@ -14,7 +14,6 @@ import torchvision.transforms as transforms
 from pytorch_grad_cam import EigenCAM
 from pytorch_grad_cam.utils.image import show_cam_on_image, scale_cam_image
 from PIL import Image
-import torchvision
 import argparse
 import os
 from yolori.exp import get_exp
@@ -22,9 +21,9 @@ from yolori.exp import get_exp
 
 def make_parser():
     parser = argparse.ArgumentParser("YOLORI cam parser")
-    parser.add_argument("-n", "--name", type=str, default="maa_dior_s", help="model name")
-    parser.add_argument("-i", "--imgpath", type=str, default="../imgs/21212.jpg", help="image path")
-    parser.add_argument("-d", "--device", type=str, default="cpu", help="device for cam")
+    parser.add_argument("-n", "--name", default="asff_dior_s", type=str,  help="model name")
+    parser.add_argument("-i", "--imgpath", default="../imgs/01799.jpg", type=str, help="image path")
+    parser.add_argument("-d", "--device", default="cpu", type=str, help="device for cam")
     parser.add_argument("-s", "--savecam", default=True, type=bool, help="save cam images")
     parser.add_argument("-c", "--ckpt", default=None, type=str, help="checkpoint file")
     return parser
@@ -35,6 +34,7 @@ def main(exp, args):
     img_path = args.imgpath
     target_layers = [model.head.obj_preds[2], model.head.reg_preds[2],
                      model.head.cls_preds[2]]  # You can modify it to suit your needs
+    # target_layers = [model.head.reg_preds[2],]  # You can modify it to suit your needs
     device = torch.device(args.device if args.device is not None else 'cpu')
 
     state_path = args.ckpt

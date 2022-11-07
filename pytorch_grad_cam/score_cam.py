@@ -16,10 +16,6 @@ class ScoreCAM(BaseCAM):
                                        reshape_transform=reshape_transform,
                                        uses_gradients=False)
 
-        if len(target_layers) > 0:
-            print("Warning: You are using ScoreCAM with target layers, "
-                  "however ScoreCAM will ignore them.")
-
     def get_cam_weights(self,
                         input_tensor,
                         target_layer,
@@ -55,7 +51,8 @@ class ScoreCAM(BaseCAM):
             for target, tensor in zip(targets, input_tensors):
                 for i in tqdm.tqdm(range(0, tensor.size(0), BATCH_SIZE)):
                     batch = tensor[i: i + BATCH_SIZE, :]
-                    outputs = [target(o).cpu().item() for o in self.model(batch)]
+                    outputs = [target(o).cpu().item()
+                               for o in self.model(batch)]
                     scores.extend(outputs)
             scores = torch.Tensor(scores)
             scores = scores.view(activations.shape[0], activations.shape[1])

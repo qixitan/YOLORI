@@ -2,6 +2,6 @@
 # -*- coding:utf-8 -*-
 # Copyright (c) Megvii, Inc. and its affiliates.
 
-from .coco_evaluator import COCOEvaluator
+from .coco_evaluator import COCOEvaluator, DIOREvaluator
 from .voc_evaluator import VOCEvaluator
 

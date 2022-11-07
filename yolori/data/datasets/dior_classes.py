@@ -1,5 +1,7 @@
+# -*- coding: UTF-8 -*-
+# @Author: qixitan
+# @Time: 2022/11/7
 
-# DIOR_CLASSES = ( '__background__', # always index 0
 DIOR_CLASSES = (
      "airplane",
      "airport",

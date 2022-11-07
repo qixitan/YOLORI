@@ -23,7 +23,7 @@ def make_parser():
     parser.add_argument("-expn", "--experiment-name", type=str, default=None)
     parser.add_argument("-n", "--name", type=str, default="asff_dior_n",  help="model name")
     parser.add_argument("-b", "--batch-size", type=int, default=8, help="batch size")
-    parser.add_argument("-d", "--devices", default=4, type=int, help="device for training")
+    parser.add_argument("-d", "--devices", type=int, help="device for training")
 
     parser.add_argument("-r", "--resume", action="store_true", help="resume training")
     parser.add_argument("-c", "--ckpt", default=None, type=str, help="checkpoint file")

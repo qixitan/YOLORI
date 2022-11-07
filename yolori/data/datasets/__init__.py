@@ -4,9 +4,9 @@
 
 from .coco import COCODataset
 from .coco_classes import COCO_CLASSES
-from .dior import DIORDetection
-from .dior_classes import DIOR_CLASSES
 from .datasets_wrapper import ConcatDataset, Dataset, MixConcatDataset
+from .dior import DIORDetection, DIORDataset
+from .dior_classes import DIOR_CLASSES
 from .mosaicdetection import MosaicDetection
 from .voc import VOCDetection
 from .voc_classes import VOC_CLASSES

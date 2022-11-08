@@ -1,5 +1,3 @@
-
-
 # start
 
 - install
@@ -18,11 +16,10 @@
   python yolori.tools.eigercam.py -n exp_file -i /PATH/TO/IMAGE.jpg  
   # save cam images at IMAGE's dir default
   ```
+  
+  | <img src="imgs/01799.jpg" style="zoom:40%;" /> | <img src="README.assets/01799_EigenCam_maa_dior_s.jpg" style="zoom:40%;" /> |
+  | :--------------------------------------------: | :----------------------------------------------------------: |
 
-<center class="half">     
-    <img src="imgs/01799.jpg", style="zoom:40%;" />     
-    <img src="imgs/01799_EigenCam_maa_dior_s.jpg", style="zoom:40%;" /> 
-</center>
 
 - suport asff as neck
 

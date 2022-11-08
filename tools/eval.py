@@ -24,7 +24,6 @@ def make_parser():
     parser = argparse.ArgumentParser("YOLORI Eval")
     parser.add_argument("-expn", "--experiment-name", type=str, default=None)
     parser.add_argument("-n", "--name", type=str, help="model name")
-
     # distributed
     parser.add_argument("--dist-backend", default="nccl", type=str, help="distributed backend")
     parser.add_argument("--dist-url", default=None, type=str, help="url used to set up distributed training", )
@@ -32,9 +31,11 @@ def make_parser():
     parser.add_argument("-d", "--devices", type=int, help="device for training")
     parser.add_argument("--num_machines", default=1, type=int, help="num of node for training")
     parser.add_argument("--machine_rank", default=0, type=int, help="node rank for multi-node training")
+    # ckpt
     parser.add_argument("-f", "--exp_file", default=None, type=str, help="pls input your expriment description file", )
     parser.add_argument("-c", "--ckpt", default=None, type=str, help="ckpt for eval")
     parser.add_argument("--conf", default=None, type=float, help="test conf")
+    # test
     parser.add_argument("--nms", default=None, type=float, help="test nms threshold")
     parser.add_argument("--tsize", default=None, type=int, help="test img size")
     parser.add_argument("--seed", default=None, type=int, help="eval seed")
@@ -90,7 +91,7 @@ def main(exp, args, num_gpu):
 
     model = exp.get_model()
     logger.info("Model Summary: {}".format(get_model_info(model, exp.test_size)))
-    logger.info("Model Structure:\n{}".format(str(model)))
+    # logger.info("Model Structure:\n{}".format(str(model)))
 
     evaluator = exp.get_evaluator(args.batch_size, is_distributed, args.test, args.legacy)
     evaluator.per_class_mAP = True

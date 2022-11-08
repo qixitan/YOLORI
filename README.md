@@ -1,16 +1,36 @@
-# 工作内容记录
 
-| Time |           key-point           |                            Detail                            | Progress |
-| :--: | :---------------------------: | :----------------------------------------------------------: | :------: |
-| 1003 | 构建backbone、neck、yoloxhead | 修正完成backbone、neck、yoloxhead的model_size输出，并构建完成建立模型的过程，yoloxhead中包括了yolox loss计算，backbone包括darknet、cspdarknet，head主要包括了两种解耦方式的检测头 |    ✅     |
-| 1004 |            完成exp            |           构建每个训练任务的模板，包括数据，模型等           |    ✅     |
-| 1005 | 修正fpn为输入输出的通道数相同 |  均使用相同的model_size参数同一构建backbone、neck、head模块  |    ✅     |
-| 1007 |           Trainer类           |                实现每个定义好的exp的训练过程                 |    ✅     |
-| 1014 |              DDP              |                       实现单机多卡训练                       |    ✅     |
-| 1015 |   测试基于DIOR&nano版本代码   | 1007下午被挤掉 1008重新开始 任务内容记录在train_log.txt，目前已完成train和val |    ✅     |
-| 1020 |           shell运行           |                  可以直接使用命令行运行代码                  |    ✅     |
-| 1028 |              vit              |                                                              |          |
-| 1104 |              CAM              |                      生成yolox的热力图                       |    ✅     |
+
+# start
+
+- install
+
+  ```shell
+  # install
+  python setup.py develop
+  # train
+  python yolori.tools.train -n asff_dior_n -b 256
+  ```
+
+- suport EigerCam
+
+  ```shell
+  # get cam 
+  python yolori.tools.eigercam.py -n exp_file -i /PATH/TO/IMAGE.jpg  
+  # save cam images at IMAGE's dir default
+  ```
+
+<center class="half">     
+    <img src="imgs/01799.jpg", style="zoom:40%;" />     
+    <img src="imgs/01799_EigenCam_maa_dior_s.jpg", style="zoom:40%;" /> 
+</center>
+
+- suport asff as neck
+
+  <img src="README.assets/ASFF.png" style="zoom:75%;" />
+
+- suport resnet as backbone
+
+- suport repvgg as backbone
 
 # Plan
 
@@ -24,7 +44,7 @@
 |          |    vgg     |                                     |        |      |
 |          |  convnext  |                                     |        |      |
 |          |    vit     |                                     |        |      |
-|   ✅     |   repVGG   |                                     |        | 1021 |
+|    ✅     |   repVGG   |                                     |        | 1021 |
 
 
 
@@ -32,12 +52,12 @@
 
 本项目中实现的neck中的涉及到的每个layer的block数目都默认与backbone中第层中的block数目相同
 
-| Progress |                            model                             |      Detail       | Time |
-| :------: | :----------------------------------------------------------: | :---------------: | :--: |
-|    ✅     |                             FPN                              |                   | 1003 |
-|    ✅     |                             PAN                              |                   | 1003 |
-|    ✅     |                             SCA                              |  自己使用的模块   | 1024 |
-|    ✅     | [ASFF](https://click.endnote.com/viewer?doi=10.48550%2Farxiv.1911.09516&token=WzM0MDI0NjUsIjEwLjQ4NTUwL2FyeGl2LjE5MTEuMDk1MTYiXQ.abCZpFILssJmEMgwK2wYLBnvoBw): [code](https://blog.csdn.net/weixin_45679938/article/details/122354725) | [模型结构](#ASFF) |      |
+| Progress |                            model                             |     Detail     | Time |
+| :------: | :----------------------------------------------------------: | :------------: | :--: |
+|    ✅     |                             FPN                              |                | 1003 |
+|    ✅     |                             PAN                              |                | 1003 |
+|    ✅     |                             SCA                              | 自己使用的模块 | 1024 |
+|    ✅     | [ASFF](https://click.endnote.com/viewer?doi=10.48550%2Farxiv.1911.09516&token=WzM0MDI0NjUsIjEwLjQ4NTUwL2FyeGl2LjE5MTEuMDk1MTYiXQ.abCZpFILssJmEMgwK2wYLBnvoBw): [code](https://blog.csdn.net/weixin_45679938/article/details/122354725) |                |      |
 
 ### Head
 
@@ -55,22 +75,11 @@
 
 ## Demo
 
-| Progress | 任务项 |     Detail     | Time |
-| :------: | :----: | :------------: | :--: |
-|    ✅     |  CAM   | 就行模型可视化 | 1104 |
+| Progress | 任务项 |      Detail      | Time |
+| :------: | :----: | :--------------: | :--: |
+|    ✅     |  CAM   | 模型热力图可视化 | 1104 |
 
-# start
 
-```shell
-# install
-python setup.py develop
-
-# train
-python yolori.tools.train -n asff_dior_n -b 256 -o --cache 
-
-# get cam 
-python yolori.tools.eigercam.py -n asff_dior_n -i ../imgs/21212.jpg  # save cam in ../imgs default
-```
 
 
 
@@ -133,6 +142,4 @@ cd YOLORI-base-v1
 python setup.py develop
 ```
 
-# model framework
-
-## ASFF![](README.assets/ASFF.png)
+## 

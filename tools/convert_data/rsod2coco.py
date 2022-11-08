@@ -12,9 +12,7 @@ import numpy as np
 
 def dior_classes():
     return [
-        "airplane", "airport", "baseballfield", "basketballcourt", "bridge", "chimney", "dam",
-        "Expressway-Service-area", "Expressway-toll-station", "golffield", "groundtrackfield", "harbor", "overpass",
-        "ship", "stadium", "storagetank", "tenniscourt", "trainstation", "vehicle", "windmill"
+        "aircraft", "oiltank", "overpass", "playground"
     ]
 
 
@@ -75,28 +73,26 @@ def parse_xml(args):
     return annotation
 
 
-def cvt_annotations(devkit_path, years, split, out_file):
-    if not isinstance(years, list):
-        years = [years]
+def cvt_annotations(devkit_path, split, out_file):
     annotations = []
-    for year in years:
-        filelist = osp.join(devkit_path,
-                            f'DIOR{year}/ImageSets/Main/{split}.txt')
-        if not osp.isfile(filelist):
-            print(f'filelist does not exist: {filelist}, '
-                  f'skip dior{year} {split}')
-            return
-        img_names = mmcv.list_from_file(filelist)
-        xml_paths = [
-            osp.join(devkit_path, f'DIOR{year}/Annotations/{img_name}.xml')
-            for img_name in img_names
-        ]
-        img_paths = [
-            f'{img_name}.jpg' for img_name in img_names
-        ]
-        part_annotations = mmcv.track_progress(parse_xml,
-                                               list(zip(xml_paths, img_paths)))
-        annotations.extend(part_annotations)
+
+    filelist = osp.join(devkit_path,
+                        f'ImageSets/Main/{split}.txt')
+    if not osp.isfile(filelist):
+        print(f'filelist does not exist: {filelist}, '
+              f'skip {split}')
+        return
+    img_names = mmcv.list_from_file(filelist)
+    xml_paths = [
+        osp.join(devkit_path, f'Annotations/{img_name}.xml')
+        for img_name in img_names
+    ]
+    img_paths = [
+        f'{img_name}.jpg' for img_name in img_names
+    ]
+    part_annotations = mmcv.track_progress(parse_xml,
+                                           list(zip(xml_paths, img_paths)))
+    annotations.extend(part_annotations)
     if out_file.endswith('json'):
         annotations = cvt_to_coco_json(annotations)
     mmcv.dump(annotations, out_file)
@@ -192,7 +188,7 @@ def cvt_to_coco_json(annotations):
 
 def parse_args():
     parser = argparse.ArgumentParser(
-        description='Convert PASCAL DIOR annotations to mmdetection format')
+        description='Convert PASCAL RSOD annotations to mmdetection format')
     parser.add_argument('devkit_path', help='pascal voc devkit path')
     parser.add_argument('-o', '--out-dir', help='output path')
     parser.add_argument(
@@ -210,28 +206,22 @@ def main():
     out_dir = args.out_dir if args.out_dir else devkit_path
     mmcv.mkdir_or_exist(out_dir)
 
-    years = []
-
-    if osp.isdir(osp.join(devkit_path, 'DIOR2018')):
-        years.append('2018')
     out_fmt = f'.{args.out_format}'
     if args.out_format == 'coco':
         out_fmt = '.json'
 
-    for year in years:
-        if year == '2018':
-            prefix = 'DIOR2018'
-        for split in ['train', 'val', 'trainval']:
-            dataset_name = prefix + '_' + split
-            print(f'processing {dataset_name} ...')
-            cvt_annotations(devkit_path, year, split,
-                            osp.join(out_dir, dataset_name + out_fmt))
-        if not isinstance(year, list):
-            dataset_name = prefix + '_test'
-            print(f'processing {dataset_name} ...')
-            cvt_annotations(devkit_path, year, 'test',
-                            osp.join(out_dir, dataset_name + out_fmt))
-    print('Done!')
+    prefix = 'RSOD'
+    for split in ['train', 'val', 'trainval']:
+        dataset_name = prefix + '_' + split
+        print(f'processing {dataset_name} ...')
+        cvt_annotations(devkit_path, split,
+                        osp.join(out_dir, dataset_name + out_fmt))
+    dataset_name = prefix + '_test'
+    print(f'processing {dataset_name} ...')
+    cvt_annotations(devkit_path, 'test',
+                    osp.join(out_dir, dataset_name + out_fmt))
+
+print('Done!')
 
 
 if __name__ == '__main__':

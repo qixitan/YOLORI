@@ -20,9 +20,9 @@ from yolori.exp import get_exp
 
 
 def make_parser():
-    parser = argparse.ArgumentParser("YOLORI cam parser")
-    parser.add_argument("-n", "--name", default="asff_dior_s", type=str,  help="model name")
-    parser.add_argument("-i", "--imgpath", default="../imgs/01799.jpg", type=str, help="image path")
+    parser = argparse.ArgumentParser("YOLORI CAM parser")
+    parser.add_argument("-n", "--name", type=str,  help="model name")
+    parser.add_argument("-i", "--imgpath", type=str, help="image path")
     parser.add_argument("-d", "--device", default="cpu", type=str, help="device for cam")
     parser.add_argument("-s", "--savecam", default=True, type=bool, help="save cam images")
     parser.add_argument("-c", "--ckpt", default=None, type=str, help="checkpoint file")

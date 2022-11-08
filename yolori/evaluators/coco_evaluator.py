@@ -264,7 +264,7 @@ class COCOEvaluator:
                 json.dump(data_dict, open(tmp, "w"))
                 cocoDt = cocoGt.loadRes(tmp)
             try:
-                from yolox.layers import COCOeval_opt as COCOeval
+                from yolori.layers import COCOeval_opt as COCOeval
             except ImportError:
                 from pycocotools.cocoeval import COCOeval
 
@@ -469,7 +469,7 @@ class DIOREvaluator:
                 json.dump(data_dict, open(tmp, "w"))
                 cocoDt = cocoGt.loadRes(tmp)
             try:
-                from yolox.layers import COCOeval_opt as COCOeval
+                from yolori.layers import COCOeval_opt as COCOeval
             except ImportError:
                 from pycocotools.cocoeval import COCOeval
 
@@ -487,6 +487,3 @@ class DIOREvaluator:
             return cocoEval.stats[0], cocoEval.stats[1], info
         else:
             return 0, 0, info
-
-if __name__ == '__main__':
-    print(COCO_CLASSES)

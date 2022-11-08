@@ -9,7 +9,7 @@
   python yolori.tools.train -n asff_dior_n -b 256
   ```
 
-- suport EigerCam
+- support EigerCam
 
   ```shell
   # get cam 
@@ -17,17 +17,21 @@
   # save cam images at IMAGE's dir default
   ```
   
-  | <img src="imgs/01799.jpg" style="zoom:40%;" /> | <img src="README.assets/01799_EigenCam_maa_dior_s.jpg" style="zoom:40%;" /> |
-  | :--------------------------------------------: | :----------------------------------------------------------: |
+  <center class="half">
+      <img src="imgs/01799.jpg" style="zoom:40%;" />
+      <img src="imgs/01799_EigenCam.jpg" style="zoom:40%;" />
+  </center>
+  
+  
 
 
-- suport asff as neck
+- support asff as neck
 
   <img src="README.assets/ASFF.png" style="zoom:75%;" />
 
-- suport resnet as backbone
+- support resnet as backbone
 
-- suport repvgg as backbone
+- support repvgg as backbone
 
 # Plan
 

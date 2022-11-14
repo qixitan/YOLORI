@@ -21,5 +21,8 @@ from .maa import MAA
 from .asff import ASFF
 from .as_maa import AS_MAA
 
+from .noneck import NONeck, NONeck1, NONeck2
+
 # head
+from .yolo_head import CoupleHead
 

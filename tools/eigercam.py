@@ -21,7 +21,7 @@ from yolori.exp import get_exp
 
 def make_parser():
     parser = argparse.ArgumentParser("YOLORI CAM parser")
-    parser.add_argument("-n", "--name", type=str,  help="model name")
+    parser.add_argument("-n", "--name", type=str, help="model name")
     parser.add_argument("-i", "--imgpath", type=str, help="image path")
     parser.add_argument("-d", "--device", default="cpu", type=str, help="device for cam")
     parser.add_argument("-s", "--savecam", default=True, type=bool, help="save cam images")

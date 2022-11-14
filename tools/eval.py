@@ -133,9 +133,17 @@ def main(exp, args, num_gpu):
         decoder = None
 
     # start evaluate
-    *_, summary = evaluator.evaluate(
+    # *_, summary = evaluator.evaluate(
+    #     model, is_distributed, args.fp16, trt_file, decoder, exp.test_size
+    # )
+    # logger.info("\n" + summary)
+
+    _, map50, summary = evaluator.evaluate(
         model, is_distributed, args.fp16, trt_file, decoder, exp.test_size
     )
+    # logger.info("\n" + map)
+    print(map50)
+    logger.info("\n" + " ".join(map(str, map50.ravel().tolist())))
     logger.info("\n" + summary)
 
 

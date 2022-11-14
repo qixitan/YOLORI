@@ -1,4 +1,4 @@
-# start
+# Start
 
 - install
 
@@ -18,8 +18,8 @@
   ```
   
   <center class="half">
-      <img src="imgs/01799.jpg" style="zoom:40%;" />
-      <img src="imgs/01799_EigenCam.jpg" style="zoom:40%;" />
+      <img src="imgs/01799.jpg" style="zoom:25%;" />
+      <img src="imgs/01799_EigenCam.jpg" style="zoom:25%;" />
   </center>
   
   

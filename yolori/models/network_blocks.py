@@ -31,7 +31,7 @@ class BaseConv(nn.Module):
     """A Conv2d -> Batchnorm -> silu/leaky relu block"""
 
     def __init__(
-        self, in_channels, out_channels, kernel_size, stride, groups=1, bias=False, act="silu"
+            self, in_channels, out_channels, kernel_size, stride, groups=1, bias=False, act="silu"
     ):
         super().__init__()
         # same padding
@@ -80,13 +80,13 @@ class DWConv(nn.Module):
 class Bottleneck(nn.Module):
     # Standard bottleneck
     def __init__(
-        self,
-        in_channels,
-        out_channels,
-        shortcut=True,
-        expansion=0.5,
-        depthwise=False,
-        act="silu",
+            self,
+            in_channels,
+            out_channels,
+            shortcut=True,
+            expansion=0.5,
+            depthwise=False,
+            act="silu",
     ):
         super().__init__()
         hidden_channels = int(out_channels * expansion)
@@ -102,61 +102,18 @@ class Bottleneck(nn.Module):
         return y
 
 
-class ResLayer(nn.Module):
-    "Residual layer with `in_channels` inputs."
-
-    def __init__(self, in_channels: int):
-        super().__init__()
-        mid_channels = in_channels // 2
-        self.layer1 = BaseConv(
-            in_channels, mid_channels, kernel_size=1, stride=1, act="lrelu"
-        )
-        self.layer2 = BaseConv(
-            mid_channels, in_channels, kernel_size=3, stride=1, act="lrelu"
-        )
-
-    def forward(self, x):
-        out = self.layer2(self.layer1(x))
-        return x + out
-
-
-class SPPBottleneck(nn.Module):
-    """Spatial pyramid pooling layer used in YOLOv3-SPP"""
-
-    def __init__(
-        self, in_channels, out_channels, kernel_sizes=(5, 9, 13), activation="silu"
-    ):
-        super().__init__()
-        hidden_channels = in_channels // 2
-        self.conv1 = BaseConv(in_channels, hidden_channels, 1, stride=1, act=activation)
-        self.m = nn.ModuleList(
-            [
-                nn.MaxPool2d(kernel_size=ks, stride=1, padding=ks // 2)
-                for ks in kernel_sizes
-            ]
-        )
-        conv2_channels = hidden_channels * (len(kernel_sizes) + 1)
-        self.conv2 = BaseConv(conv2_channels, out_channels, 1, stride=1, act=activation)
-
-    def forward(self, x):
-        x = self.conv1(x)
-        x = torch.cat([x] + [m(x) for m in self.m], dim=1)
-        x = self.conv2(x)
-        return x
-
-
 class CSPLayer(nn.Module):
     """C3 in yolov5, CSP Bottleneck with 3 convolutions"""
 
     def __init__(
-        self,
-        in_channels,
-        out_channels,
-        n=1,
-        shortcut=True,
-        expansion=0.5,
-        depthwise=False,
-        act="silu",
+            self,
+            in_channels,
+            out_channels,
+            n=1,
+            shortcut=True,
+            expansion=0.5,
+            depthwise=False,
+            act="silu",
     ):
         """
         Args:
@@ -186,6 +143,76 @@ class CSPLayer(nn.Module):
         return self.conv3(x)
 
 
+class CSPLayer_Space(nn.Module):
+    def __init__(self, in_channels, out_channels, n=1, shortcut=True, expansion=0.5, depthwise=False, act="silu"):
+        super().__init__()
+        hidden_channels = int(out_channels * expansion)  # hidden channels
+        self.conv1 = BaseConv(in_channels, hidden_channels, 1, stride=1, act=act)
+        self.conv2 = BaseConv(in_channels, hidden_channels, 1, stride=1, act=act)
+        # spatial_list = [BaseConv(hidden_channels, hidden_channels, 3, stride=1, act=act) for _ in range(n)]
+        self.m2 = SCA(hidden_channels)
+
+        self.conv3 = nn.Sequential(BaseConv(in_channels, hidden_channels, 1, stride=1, act=act))
+        module_list = [
+            Bottleneck(
+                hidden_channels, hidden_channels, shortcut, 1.0, depthwise, act=act
+            )
+            for _ in range(n)
+        ]
+        self.m3 = nn.Sequential(*module_list)
+        self.out = BaseConv(3 * hidden_channels, out_channels, 1, stride=1, act=act)
+
+    def forward(self, x):
+        x_1 = self.conv1(x)
+        x_2 = self.conv2(x)
+        x_3 = self.conv3(x)
+        x = torch.cat((x_1, self.m2(x_2), self.m3(x_3)), dim=1)
+        return self.out(x)
+
+
+class ResLayer(nn.Module):
+    "Residual layer with `in_channels` inputs."
+
+    def __init__(self, in_channels: int):
+        super().__init__()
+        mid_channels = in_channels // 2
+        self.layer1 = BaseConv(
+            in_channels, mid_channels, kernel_size=1, stride=1, act="lrelu"
+        )
+        self.layer2 = BaseConv(
+            mid_channels, in_channels, kernel_size=3, stride=1, act="lrelu"
+        )
+
+    def forward(self, x):
+        out = self.layer2(self.layer1(x))
+        return x + out
+
+
+class SPPBottleneck(nn.Module):
+    """Spatial pyramid pooling layer used in YOLOv3-SPP"""
+
+    def __init__(
+            self, in_channels, out_channels, kernel_sizes=(5, 9, 13), activation="silu"
+    ):
+        super().__init__()
+        hidden_channels = in_channels // 2
+        self.conv1 = BaseConv(in_channels, hidden_channels, 1, stride=1, act=activation)
+        self.m = nn.ModuleList(
+            [
+                nn.MaxPool2d(kernel_size=ks, stride=1, padding=ks // 2)
+                for ks in kernel_sizes
+            ]
+        )
+        conv2_channels = hidden_channels * (len(kernel_sizes) + 1)
+        self.conv2 = BaseConv(conv2_channels, out_channels, 1, stride=1, act=activation)
+
+    def forward(self, x):
+        x = self.conv1(x)
+        x = torch.cat([x] + [m(x) for m in self.m], dim=1)
+        x = self.conv2(x)
+        return x
+
+
 class Focus(nn.Module):
     """Focus width and height information into channel space."""
 
@@ -211,16 +238,18 @@ class Focus(nn.Module):
         return self.conv(x)
 
 
+# Attention block
 class SCA(nn.Module):
     """
     Self-Channels Attention
     """
+
     def __init__(self, in_channels, mode="embedded_gaussian"):
         super(SCA, self).__init__()
         assert mode in ['embedded_gaussian', 'dot_product']
         self.inplanes = in_channels
         self.mode = mode
-        self.hiden_planes = in_channels//2
+        self.hiden_planes = in_channels // 2
         self.phi_x = nn.Conv2d(self.inplanes, self.hiden_planes, kernel_size=1, stride=1, padding=0, bias=False)
         self.theta_x = nn.Conv2d(self.inplanes, self.hiden_planes, kernel_size=1, stride=1, padding=0, bias=False)
         self.g_x = nn.Conv2d(self.inplanes, self.hiden_planes, kernel_size=1, stride=1, padding=0, bias=False)
@@ -256,7 +285,6 @@ class SCA(nn.Module):
         return out
 
 
-
 class SEBlock(nn.Module):
     def __init__(self, in_channels, internal_neurons, act="relu"):
         super(SEBlock, self).__init__()
@@ -273,6 +301,53 @@ class SEBlock(nn.Module):
         x = torch.sigmoid(x)
         x = x.view(-1, self.in_channels, 1, 1)
         return inputs * x
+
+
+class ChannelAttentionModule(nn.Module):
+    def __init__(self, channel, reduction=16):
+        super(ChannelAttentionModule, self).__init__()
+        mid_channel = channel // reduction
+        self.avg_pool = nn.AdaptiveAvgPool2d(1)
+        self.max_pool = nn.AdaptiveMaxPool2d(1)
+
+        # 共享MLP权重
+        self.shared_MLP = nn.Sequential(
+            nn.Linear(in_features=channel, out_features=mid_channel),
+            nn.ReLU(inplace=True),
+            nn.Linear(in_features=mid_channel, out_features=channel)
+        )
+        self.sigmoid = nn.Sigmoid()
+
+    def forward(self, x):
+        avgout = self.shared_MLP(self.avg_pool(x).view(x.size(0), -1)).unsqueeze(2).unsqueeze(3)
+        maxout = self.shared_MLP(self.max_pool(x).view(x.size(0), -1)).unsqueeze(2).unsqueeze(3)
+        return self.sigmoid(avgout + maxout)
+
+
+class SpatialAttentionModule(nn.Module):
+    def __init__(self):
+        super(SpatialAttentionModule, self).__init__()
+        self.conv2d = nn.Conv2d(in_channels=2, out_channels=1, kernel_size=7, stride=1, padding=3)
+        self.sigmoid = nn.Sigmoid()
+
+    def forward(self, x):
+        avgout = torch.mean(x, dim=1, keepdim=True)
+        maxout, _ = torch.max(x, dim=1, keepdim=True)
+        out = torch.cat([avgout, maxout], dim=1)
+        out = self.sigmoid(self.conv2d(out))
+        return out
+
+
+class CBAM(nn.Module):
+    def __init__(self, channel):
+        super(CBAM, self).__init__()
+        self.channel_attention = ChannelAttentionModule(channel)
+        self.spatial_attention = SpatialAttentionModule()
+
+    def forward(self, x):
+        out = self.channel_attention(x) * x
+        out = self.spatial_attention(out) * out
+        return out
 
 
 def conv_bn(in_channels, out_channels, kernel_size, stride, padding, groups=1):
@@ -352,7 +427,7 @@ class RepVGGBlock(nn.Module):
                                             1:2] ** 2).sum()  # The L2 loss of the "circle" of weights in 3x3 kernel. Use regular L2 on them.
         eq_kernel = K3[:, :, 1:2, 1:2] * t3 + K1 * t1  # The equivalent resultant central point of 3x3 kernel.
         l2_loss_eq_kernel = (eq_kernel ** 2 / (
-                    t3 ** 2 + t1 ** 2)).sum()  # Normalize for an L2 coefficient comparable to regular L2.
+                t3 ** 2 + t1 ** 2)).sum()  # Normalize for an L2 coefficient comparable to regular L2.
         return l2_loss_eq_kernel + l2_loss_circle
 
         #   This func derives the equivalent kernel and bias in a DIFFERENTIABLE way.

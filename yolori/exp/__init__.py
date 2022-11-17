@@ -10,3 +10,4 @@ from .maa_dior_base import MAA_Dior_Exp
 from .asff_dior_base import ASFF_Dior_Exp
 from .asmaa_dior_base import ASMAA_Dior_Exp
 from .dior_base import Dior_Exp
+from .nwpu_base import Nwpu_Exp

@@ -5,7 +5,7 @@
 from .darknet import Darknet, CSPDarknet
 from .losses import IOUloss
 from .yolo_fpn import YOLOFPN
-from .yolo_head import YOLOXHead, YOLOXHeadN
+from .yolo_head import YOLOXHead, YOLOXHeadN, YOLOXHeadN_
 from .yolo_pafpn import YOLOPAFPN
 from .yolox import YOLOX
 # from .network_blocks import *
@@ -15,6 +15,7 @@ from .yolox import YOLOX
 # backbone
 from .resnet import ResNet
 from .repvgg import RepVGG
+from .darknet import CSPDarknet_Space
 
 # neck
 from .maa import MAA
@@ -23,6 +24,7 @@ from .as_maa import AS_MAA
 
 from .noneck import NONeck, NONeck1, NONeck2
 
+# from .yolo_pafpn import YOLOPAFPN_Space
 # head
 from .yolo_head import CoupleHead
 

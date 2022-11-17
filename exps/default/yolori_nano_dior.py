@@ -1,12 +1,10 @@
-#!/usr/bin/env python3
-# -*- coding:utf-8 -*-
-# Copyright (c) Megvii, Inc. and its affiliates.
+# -*- coding: UTF-8 -*-
+# @Author: qixitan
+# @Time: 2022/11/17
 
 import os
-
-import torch.nn as nn
-
-from yolori.exp import Exp as MyExp
+from torch import nn
+from yolori.exp import YoloX_Dior_Exp as MyExp
 
 
 class Exp(MyExp):
@@ -14,10 +12,10 @@ class Exp(MyExp):
         super(Exp, self).__init__()
         self.depth = 0.33
         self.width = 0.25
-        self.input_size = (416, 416)
+        # self.input_size = (416, 416)
         self.random_size = (10, 20)
         self.mosaic_scale = (0.5, 1.5)
-        self.test_size = (416, 416)
+        # self.test_size = (416, 416)
         self.mosaic_prob = 0.5
         self.enable_mixup = False
         self.exp_name = os.path.split(os.path.realpath(__file__))[1].split(".")[0]
@@ -29,14 +27,16 @@ class Exp(MyExp):
                 if isinstance(m, nn.BatchNorm2d):
                     m.eps = 1e-3
                     m.momentum = 0.03
+
         if "model" not in self.__dict__:
-            from yolori.models import YOLOX, YOLOPAFPN, YOLOXHead
+            from yolori.models import YOLOX, YOLOPAFPN, YOLOXHead, CSPDarknet_Space
             in_channels = [256, 512, 1024]
             # NANO model use depthwise = True, which is main difference.
             backbone = YOLOPAFPN(
                 self.depth, self.width, in_channels=in_channels,
                 act=self.act, depthwise=True,
             )
+            backbone.backbone = CSPDarknet_Space(dep_mul=self.depth, wid_mul=self.width, depthwise=True, act=self.act)
             head = YOLOXHead(
                 self.num_classes, self.width, in_channels=in_channels,
                 act=self.act, depthwise=True

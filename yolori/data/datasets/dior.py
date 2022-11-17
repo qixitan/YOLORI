@@ -20,6 +20,7 @@ from yolori.evaluators.dior_eval import dior_eval
 from .datasets_wrapper import Dataset
 from .dior_classes import DIOR_CLASSES
 from pycocotools.coco import COCO
+from yolori.data import get_yolori_datadir
 
 
 class AnnotationTransformDIOR(object):

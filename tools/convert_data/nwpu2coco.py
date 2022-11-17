@@ -12,7 +12,7 @@ import numpy as np
 
 def dior_classes():
     return [
-        "aircraft", "oiltank", "overpass", "playground"
+        "airplane", "ship", "storage tank", "baseball diamond", "tennis court", "basketball court", "ground track field", "harbor", "bridge", "vehicle"
     ]
 
 
@@ -188,7 +188,7 @@ def cvt_to_coco_json(annotations):
 
 def parse_args():
     parser = argparse.ArgumentParser(
-        description='Convert PASCAL RSOD annotations to mmdetection format')
+        description='Convert annotations to mmdetection format')
     parser.add_argument('devkit_path', help='pascal voc devkit path')
     parser.add_argument('-o', '--out-dir', help='output path')
     parser.add_argument(

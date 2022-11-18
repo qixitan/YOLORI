@@ -29,14 +29,14 @@ class Exp(MyExp):
                     m.momentum = 0.03
 
         if "model" not in self.__dict__:
-            from yolori.models import YOLOX, YOLOPAFPN, YOLOXHead, CSPDarknet_Space
+            from yolori.models import YOLOX, YOLOPAFPN, YOLOXHead, AS_CSPDarknet
             in_channels = [256, 512, 1024]
             # NANO model use depthwise = True, which is main difference.
             backbone = YOLOPAFPN(
                 self.depth, self.width, in_channels=in_channels,
                 act=self.act, depthwise=True,
             )
-            backbone.backbone = CSPDarknet_Space(dep_mul=self.depth, wid_mul=self.width, depthwise=True, act=self.act)
+            backbone.backbone = AS_CSPDarknet(dep_mul=self.depth, wid_mul=self.width, depthwise=True, act=self.act)
             head = YOLOXHead(
                 self.num_classes, self.width, in_channels=in_channels,
                 act=self.act, depthwise=True

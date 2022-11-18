@@ -15,7 +15,7 @@ from .yolox import YOLOX
 # backbone
 from .resnet import ResNet
 from .repvgg import RepVGG
-from .darknet import CSPDarknet_Space
+from .yoloas import AS_CSPDarknet
 
 # neck
 from .maa import MAA

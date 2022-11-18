@@ -143,31 +143,27 @@ class CSPLayer(nn.Module):
         return self.conv3(x)
 
 
-class CSPLayer_Space(nn.Module):
+class AS_CSPLayer(nn.Module):
     def __init__(self, in_channels, out_channels, n=1, shortcut=True, expansion=0.5, depthwise=False, act="silu"):
         super().__init__()
         hidden_channels = int(out_channels * expansion)  # hidden channels
         self.conv1 = BaseConv(in_channels, hidden_channels, 1, stride=1, act=act)
         self.conv2 = BaseConv(in_channels, hidden_channels, 1, stride=1, act=act)
-        # spatial_list = [BaseConv(hidden_channels, hidden_channels, 3, stride=1, act=act) for _ in range(n)]
-        self.m2 = SCA(hidden_channels)
-
-        self.conv3 = nn.Sequential(BaseConv(in_channels, hidden_channels, 1, stride=1, act=act))
+        self.conv3 = BaseConv(2 * hidden_channels, out_channels, 1, stride=1, act=act)
         module_list = [
             Bottleneck(
                 hidden_channels, hidden_channels, shortcut, 1.0, depthwise, act=act
             )
             for _ in range(n)
         ]
-        self.m3 = nn.Sequential(*module_list)
-        self.out = BaseConv(3 * hidden_channels, out_channels, 1, stride=1, act=act)
+        self.m = nn.Sequential(*module_list)
 
     def forward(self, x):
         x_1 = self.conv1(x)
         x_2 = self.conv2(x)
-        x_3 = self.conv3(x)
-        x = torch.cat((x_1, self.m2(x_2), self.m3(x_3)), dim=1)
-        return self.out(x)
+        x_1 = self.m(x_1)
+        x = torch.cat((x_1, x_2), dim=1)
+        return self.conv3(x)
 
 
 class ResLayer(nn.Module):

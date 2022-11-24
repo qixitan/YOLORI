@@ -18,6 +18,7 @@ class YoloX_Dior_Exp(BaseExp):
         super(YoloX_Dior_Exp, self).__init__()
 
         # ---------------- model config ---------------- #
+        self.seed = 42
         self.num_classes = 20
         self.depth = 1.00
         self.width = 1.00

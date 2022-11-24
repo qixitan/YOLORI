@@ -32,9 +32,13 @@ def make_parser():
 def main(exp, args):
     model = exp.get_model()
     img_path = args.imgpath
-    target_layers = [model.head.obj_preds[2], model.head.reg_preds[2],
-                     model.head.cls_preds[2]]  # You can modify it to suit your needs
-    # target_layers = [model.head.reg_preds[2],]  # You can modify it to suit your needs
+    # target_layers = [model.head.obj_preds[2], model.head.reg_preds[2],
+    #                  model.head.cls_preds[2]]  # You can modify it to suit your needs
+    target_layers = [model.head.obj_preds[0], model.head.reg_preds[0],
+                     model.head.cls_preds[0]]  # maa_baseline -- 只有一个尺度输出
+    # target_layers = [model.backbone.backbone.dark5]
+    # target_layers = [model.head.cls_convs]
+    # target_layers = [model.head.reg_preds[2]]  # You can modify it to suit your needs
     device = torch.device(args.device if args.device is not None else 'cpu')
 
     state_path = args.ckpt
@@ -66,9 +70,10 @@ def main(exp, args):
     if args.savecam:
         x2.save(img_path.replace(".jpg", "_EigenCam_{}.jpg").format(args.name))
 
+    print("Down {}".format(img_path))
+
 
 if __name__ == '__main__':
     args = make_parser().parse_args()
     exp = get_exp(exp_name=args.name)
     main(exp=exp, args=args)
-

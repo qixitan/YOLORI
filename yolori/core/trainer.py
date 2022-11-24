@@ -61,6 +61,7 @@ class Trainer:
         self.l1_loss = []
         self.conf_loss = []
         self.cls_loss = []
+        self.num_fg = []
 
         if self.rank == 0:
             os.makedirs(self.file_name, exist_ok=True)
@@ -153,6 +154,7 @@ class Trainer:
             self.l1_loss = []
             self.conf_loss = []
             self.cls_loss = []
+            self.num_fg = []
             self.before_epoch()
             self.train_in_iter()
             self.after_epoch()
@@ -214,6 +216,7 @@ class Trainer:
         self.l1_loss.append(outputs["l1_loss"])
         self.conf_loss.append(outputs["conf_loss"])
         self.cls_loss.append(outputs["cls_loss"])
+        self.num_fg.append(outputs["num_fg"])
         self.meter.update(
             iter_time=iter_end_time - iter_start_time,
             data_time=data_end_time - iter_start_time,
@@ -364,11 +367,13 @@ class Trainer:
         l1_loss = sum(self.l1_loss) / len(self.l1_loss)
         conf_loss = sum(self.conf_loss) / len(self.conf_loss)
         cls_loss = sum(self.cls_loss) / len(self.cls_loss)
+        num_fg = sum(self.num_fg)/len(self.num_fg)
         if self.rank == 0:
             self.tblogger.add_scalar("train/total_loss", total_loss, self.epoch + 1)
             self.tblogger.add_scalar("train/iou_loss", iou_loss, self.epoch + 1)
             self.tblogger.add_scalar("train/l1_loss", l1_loss, self.epoch + 1)
             self.tblogger.add_scalar("train/conf_loss", conf_loss, self.epoch + 1)
             self.tblogger.add_scalar("train/cls_loss", cls_loss, self.epoch + 1)
+            self.tblogger.add_scalar("train/num_fg", num_fg, self.epoch + 1)
         synchronize()
 

@@ -83,7 +83,7 @@ class AnnotationTransformDIOR(object):
 
 class DIORDetection(Dataset):
     """
-        DIORDetection Dataset Object
+        DIORDetection Dataset Object VOC 格式
 
         input is image, target is annotation
 

@@ -15,14 +15,14 @@ from .yolox import YOLOX
 # backbone
 from .resnet import ResNet
 from .repvgg import RepVGG
-from .yoloas import AS_CSPDarknet
+from .yoloas import AS_CSPDarknet, SE_CSPDarknet, CBAM_CSPDarknet
 
 # neck
 from .maa import MAA
 from .asff import ASFF
 from .as_maa import AS_MAA
-
 from .noneck import NONeck, NONeck1, NONeck2
+from .yoloas import SE_YOLOPAFPN, CBAM_YOLOPAFPN, KSE_YOLOPAFPN
 
 # from .yolo_pafpn import YOLOPAFPN_Space
 # head

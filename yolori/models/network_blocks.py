@@ -17,11 +17,12 @@ class SiLU(nn.Module):
 
 def get_activation(name: str = 'relu'):
     act_dic = {
-        "relu": nn.ReLU(inplace=True),
-        'silu': nn.SiLU(inplace=True),
-        "lrelu": nn.LeakyReLU(0.1, inplace=True),
-        "selu": nn.SELU(inplace=True),
+        "relu": nn.ReLU(),
+        'silu': nn.SiLU(),
+        "lrelu": nn.LeakyReLU(0.1),
+        "selu": nn.SELU(),
         "gelu": nn.GELU(),
+        "mish": nn.Mish(),
     }
     assert name in act_dic.keys(), AttributeError("Unsupported act type: {}".format(name))
     return act_dic[name]
@@ -37,13 +38,7 @@ class BaseConv(nn.Module):
         # same padding
         pad = (kernel_size - 1) // 2
         self.conv = nn.Conv2d(
-            in_channels,
-            out_channels,
-            kernel_size=kernel_size,
-            stride=stride,
-            padding=pad,
-            groups=groups,
-            bias=bias,
+            in_channels, out_channels, kernel_size=kernel_size, stride=stride, padding=pad, groups=groups, bias=bias,
         )
         self.bn = nn.BatchNorm2d(out_channels)
         self.act = get_activation(act)
@@ -143,13 +138,16 @@ class CSPLayer(nn.Module):
         return self.conv3(x)
 
 
-class AS_CSPLayer(nn.Module):
+class SE_CSPLayer(nn.Module):
     def __init__(self, in_channels, out_channels, n=1, shortcut=True, expansion=0.5, depthwise=False, act="silu"):
         super().__init__()
         hidden_channels = int(out_channels * expansion)  # hidden channels
         self.conv1 = BaseConv(in_channels, hidden_channels, 1, stride=1, act=act)
         self.conv2 = BaseConv(in_channels, hidden_channels, 1, stride=1, act=act)
-        self.conv3 = BaseConv(2 * hidden_channels, out_channels, 1, stride=1, act=act)
+        self.conv4 = BaseConv(in_channels, hidden_channels, 1, stride=1, act=act)
+        self.conv3 = BaseConv(3 * hidden_channels, out_channels, 1, stride=1, act=act)
+
+        self.SEBlock = SEBlock(in_channels=hidden_channels, internal_neurons=hidden_channels // 16)
         module_list = [
             Bottleneck(
                 hidden_channels, hidden_channels, shortcut, 1.0, depthwise, act=act
@@ -161,8 +159,36 @@ class AS_CSPLayer(nn.Module):
     def forward(self, x):
         x_1 = self.conv1(x)
         x_2 = self.conv2(x)
+        x_4 = self.SEBlock(self.conv4(x))
         x_1 = self.m(x_1)
-        x = torch.cat((x_1, x_2), dim=1)
+        x = torch.cat((x_1, x_2, x_4), dim=1)
+        return self.conv3(x)
+
+
+class CBAM_CSPLayer(nn.Module):
+    def __init__(self, in_channels, out_channels, n=1, shortcut=True, expansion=0.5, depthwise=False, act="silu"):
+        super().__init__()
+        hidden_channels = int(out_channels * expansion)  # hidden channels
+        self.conv1 = BaseConv(in_channels, hidden_channels, 1, stride=1, act=act)
+        self.conv2 = BaseConv(in_channels, hidden_channels, 1, stride=1, act=act)
+        self.conv4 = BaseConv(in_channels, hidden_channels, 1, stride=1, act=act)
+        self.conv3 = BaseConv(3 * hidden_channels, out_channels, 1, stride=1, act=act)
+
+        self.CBAM = CBAM(in_channels=hidden_channels)
+        module_list = [
+            Bottleneck(
+                hidden_channels, hidden_channels, shortcut, 1.0, depthwise, act=act
+            )
+            for _ in range(n)
+        ]
+        self.m = nn.Sequential(*module_list)
+
+    def forward(self, x):
+        x_1 = self.conv1(x)
+        x_2 = self.conv2(x)
+        x_4 = self.CBAM(self.conv4(x))
+        x_1 = self.m(x_1)
+        x = torch.cat((x_1, x_2, x_4), dim=1)
         return self.conv3(x)
 
 
@@ -207,6 +233,29 @@ class SPPBottleneck(nn.Module):
         x = torch.cat([x] + [m(x) for m in self.m], dim=1)
         x = self.conv2(x)
         return x
+
+
+class SPPCSP(nn.Module):
+    # CSP SPP https://github.com/WongKinYiu/CrossStagePartialNetworks
+    def __init__(self, in_channels, out_channels, kernel_sizes=(5, 9, 13), act="silu"):
+        super(SPPCSP, self).__init__()
+        hidden_channels = in_channels // 2  # hidden channels
+        self.cv1 = BaseConv(in_channels, hidden_channels, 1, 1)
+        self.cv2 = nn.Conv2d(in_channels, hidden_channels, 1, 1, bias=False)
+        self.cv3 = BaseConv(hidden_channels, hidden_channels, 3, 1)
+        self.cv4 = BaseConv(hidden_channels, hidden_channels, 1, 1)
+        self.m = nn.ModuleList([nn.MaxPool2d(kernel_size=x, stride=1, padding=x // 2) for x in kernel_sizes])
+        self.cv5 = BaseConv(4 * hidden_channels, hidden_channels, 1, 1)
+        self.cv6 = BaseConv(hidden_channels, hidden_channels, 3, 1)
+        self.bn = nn.BatchNorm2d(2 * hidden_channels)
+        self.act = get_activation(act)
+        self.cv7 = BaseConv(2 * hidden_channels, out_channels, 1, 1)
+
+    def forward(self, x):
+        x1 = self.cv4(self.cv3(self.cv1(x)))
+        y1 = self.cv6(self.cv5(torch.cat([x1] + [m(x1) for m in self.m], 1)))
+        y2 = self.cv2(x)
+        return self.cv7(self.act(self.bn(torch.cat((y1, y2), dim=1))))
 
 
 class Focus(nn.Module):
@@ -282,8 +331,10 @@ class SCA(nn.Module):
 
 
 class SEBlock(nn.Module):
-    def __init__(self, in_channels, internal_neurons, act="relu"):
+    def __init__(self, in_channels, internal_neurons=None, act="relu"):
         super(SEBlock, self).__init__()
+        if internal_neurons is None:
+            internal_neurons = in_channels // 16
         self.down = nn.Conv2d(in_channels, out_channels=internal_neurons, kernel_size=1, stride=1, bias=True)
         self.up = nn.Conv2d(internal_neurons, in_channels, kernel_size=1, stride=1, bias=True)
         self.in_channels = in_channels
@@ -294,6 +345,23 @@ class SEBlock(nn.Module):
         x = self.down(x)
         x = self.act(x)
         x = self.up(x)
+        x = torch.sigmoid(x)
+        x = x.view(-1, self.in_channels, 1, 1)
+        return inputs * x
+
+
+class KSEBlock(nn.Module):
+    def __init__(self, in_channels, k=8, act="relu"):
+        super(KSEBlock, self).__init__()
+        self.down = nn.Conv2d(in_channels, out_channels=in_channels, kernel_size=1, stride=1, bias=True)
+        self.k_mlp = nn.Conv2d(in_channels=in_channels, out_channels=in_channels, kernel_size=1, stride=1, bias=True, groups=k)
+        self.in_channels = in_channels
+        self.act = get_activation(act)
+
+    def forward(self, inputs):
+        x = F.avg_pool2d(inputs, kernel_size=inputs.size(3))
+        x = self.k_mlp(x)
+        x = self.act(x)
         x = torch.sigmoid(x)
         x = x.view(-1, self.in_channels, 1, 1)
         return inputs * x
@@ -335,9 +403,9 @@ class SpatialAttentionModule(nn.Module):
 
 
 class CBAM(nn.Module):
-    def __init__(self, channel):
+    def __init__(self, in_channels):
         super(CBAM, self).__init__()
-        self.channel_attention = ChannelAttentionModule(channel)
+        self.channel_attention = ChannelAttentionModule(in_channels)
         self.spatial_attention = SpatialAttentionModule()
 
     def forward(self, x):

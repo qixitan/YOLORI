@@ -47,8 +47,6 @@
 |          |    vit     |                                     |        |      |
 |    ✅     |   repVGG   |                                     |        | 1021 |
 
-
-
 ### Neck
 
 本项目中实现的neck中的涉及到的每个layer的block数目都默认与backbone中第层中的block数目相同
@@ -65,6 +63,15 @@
 | Progress |   model   |               Detail                | Time |
 | :------: | :-------: | :---------------------------------: | :--: |
 |    ✅     | Decoupled | 在YOLOX中的+修改的Feature Align方式 | 1003 |
+
+## Block
+
+| Progress |  model  |  Detail  | Time |
+| :------: | :-----: | :------: | :--: |
+|    ✅     | SEBlock | 注意力块 | 1123 |
+|    ✅     |  CBAM   | 注意力块 | 1123 |
+
+
 
 ## Label Assign
 

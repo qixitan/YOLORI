@@ -5,6 +5,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import math
 
 
 class SiLU(nn.Module):
@@ -331,10 +332,8 @@ class SCA(nn.Module):
 
 
 class SEBlock(nn.Module):
-    def __init__(self, in_channels, internal_neurons=None, act="relu"):
+    def __init__(self, in_channels, internal_neurons=16, act="relu"):
         super(SEBlock, self).__init__()
-        if internal_neurons is None:
-            internal_neurons = in_channels // 16
         self.down = nn.Conv2d(in_channels, out_channels=internal_neurons, kernel_size=1, stride=1, bias=True)
         self.up = nn.Conv2d(internal_neurons, in_channels, kernel_size=1, stride=1, bias=True)
         self.in_channels = in_channels
@@ -349,6 +348,22 @@ class SEBlock(nn.Module):
         x = x.view(-1, self.in_channels, 1, 1)
         return inputs * x
 
+
+class ECA(nn.Module):
+    def __init__(self, in_channels, b=1, gamma=2):
+        super(ECA, self).__init__()
+        kernel_size = int(abs((math.log(in_channels, 2) + b) / gamma))
+        kernel_size = kernel_size if kernel_size % 2 else kernel_size + 1
+
+        self.avg_pool = nn.AdaptiveAvgPool2d(1)
+        self.conv = nn.Conv1d(1, 1, kernel_size=kernel_size, padding=(kernel_size - 1) // 2, bias=False)
+        self.sigmoid = nn.Sigmoid()
+
+    def forward(self, x):
+        y = self.avg_pool(x)
+        y = self.conv(y.squeeze(-1).transpose(-1, -2)).transpose(-1, -2).unsqueeze(-1)
+        y = self.sigmoid(y)
+        return x * y.expand_as(x)
 
 class KSEBlock(nn.Module):
     def __init__(self, in_channels, k=8, act="relu"):
@@ -557,3 +572,14 @@ class RepVGGBlock(nn.Module):
         if hasattr(self, 'id_tensor'):
             self.__delattr__('id_tensor')
         self.deploy = True
+
+
+# weight_init
+def normal_init(module: nn.Module,
+                mean: float = 0,
+                std: float = 1,
+                bias: float = 0) -> None:
+    if hasattr(module, 'weight') and module.weight is not None:
+        nn.init.normal_(module.weight, mean, std)
+    if hasattr(module, 'bias') and module.bias is not None:
+        nn.init.constant_(module.bias, bias)

@@ -149,5 +149,3 @@ pip install --upgrade setuptools==56.1.0
 cd YOLORI-base-v1 
 python setup.py develop
 ```
-
-## 

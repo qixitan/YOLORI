@@ -26,5 +26,6 @@ from .yoloas import SE_YOLOPAFPN, CBAM_YOLOPAFPN, KSE_YOLOPAFPN
 
 # from .yolo_pafpn import YOLOPAFPN_Space
 # head
-from .yolo_head import CoupleHead
+from .yolo_head import CoupleHead, YOLOXHead_ciou
+from .tood import TOODHead
 

@@ -41,7 +41,7 @@ def make_parser():
                         help="occupy GPU memory first for training.", )
     parser.add_argument("--cache", dest="cache", action="store_true",
                         help="Caching imgs to RAM for fast training.", )
-    parser.add_argument("--fp16", dest="fp16", default=True, action="store_true",
+    parser.add_argument("--fp16", dest="fp16", action="store_true",
                         help="Adopting mix precision training.", )
     parser.add_argument("opts", help="Modify config options using the command-line", default=None,
                         nargs=argparse.REMAINDER, )

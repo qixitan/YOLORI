@@ -6,8 +6,8 @@
 import torch
 from torch import nn
 import torch.nn.functional as F
-from .network_blocks import normal_init, BaseConv
-from .yolo_head import YOLOXHead
+from yolori.models.network_blocks import normal_init, BaseConv
+from .yolox_head import YOLOXHead
 
 __all__ = ["TOODHead"]
 

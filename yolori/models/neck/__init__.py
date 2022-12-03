@@ -5,9 +5,9 @@
 # only neck
 from .asff import ASFF
 from .fpn import FPN
+from .f_neck import AS_SCA, CBAM_PAFPN, PAFPN_ASFF, PANFPN_AS_SCA
 from .maa import MAA
 from .pafpn import PAFPN
-from .f_neck import AS_SCA, PAFPN_ASFF
 
 
-__all__ = ["FPN", "MAA", "PAFPN", "ASFF", "AS_SCA", PAFPN_ASFF]
+__all__ = ["FPN", "MAA", "PAFPN", "ASFF", "AS_SCA", "PAFPN_ASFF", "PANFPN_AS_SCA", "CBAM_PAFPN"]

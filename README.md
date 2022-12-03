@@ -56,13 +56,14 @@
 |    ✅     |                             FPN                              |                | 1003 |
 |    ✅     |                             PAN                              |                | 1003 |
 |    ✅     |                             SCA                              | 自己使用的模块 | 1024 |
-|    ✅     | [ASFF](https://click.endnote.com/viewer?doi=10.48550%2Farxiv.1911.09516&token=WzM0MDI0NjUsIjEwLjQ4NTUwL2FyeGl2LjE5MTEuMDk1MTYiXQ.abCZpFILssJmEMgwK2wYLBnvoBw): [code](https://blog.csdn.net/weixin_45679938/article/details/122354725) |                |      |
+|    ✅     | [ASFF](https://click.endnote.com/viewer?doi=10.48550%2Farxiv.1911.09516&token=WzM0MDI0NjUsIjEwLjQ4NTUwL2FyeGl2LjE5MTEuMDk1MTYiXQ.abCZpFILssJmEMgwK2wYLBnvoBw): [code reference](https://blog.csdn.net/weixin_45679938/article/details/122354725) |                |      |
 
 ### Head
 
-| Progress |   model   |               Detail                | Time |
-| :------: | :-------: | :---------------------------------: | :--: |
-|    ✅     | Decoupled | 在YOLOX中的+修改的Feature Align方式 | 1003 |
+| Progress |                            model                             |               Detail                | Time |
+| :------: | :----------------------------------------------------------: | :---------------------------------: | :--: |
+|    ✅     |                          Decoupled                           | 在YOLOX中的+修改的Feature Align方式 | 1003 |
+|    ✅     | [TOOD](https://paperswithcode.com/paper/tood-task-aligned-one-stage-object-detection):[code reference](https://github.com/alibaba/EasyCV) |       TOODHead used in yolov6       | 1201 |
 
 ## Block
 
@@ -79,7 +80,7 @@
 | :------: | :----: | :---------: | :--: |
 |    ✅     | simOTA | YOLOX中使用 | 1007 |
 |          |  ATSS  |             |      |
-|          |  TOOD  |             |      |
+|          |        |             |      |
 
 ## Demo
 

@@ -1,6 +1,7 @@
 # -*- coding: UTF-8 -*-
 # @Author: qixitan
 # @Time: 2022/12/1
+# reference from https://github.com/alibaba/EasyCV
 
 
 import torch
@@ -8,8 +9,6 @@ from torch import nn
 import torch.nn.functional as F
 from yolori.models.network_blocks import normal_init, BaseConv
 from .yolox_head import YOLOXHead
-
-__all__ = ["TOODHead"]
 
 
 class TaskDecomposition(nn.Module):

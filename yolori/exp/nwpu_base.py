@@ -32,10 +32,10 @@ class Nwpu_Exp(BaseExp):
         self.multiscale_range = 0
         self.warmup_epochs = 1
         # You can uncomment this line to specify a multiscale range
-        self.random_size = (14, 26)
+        # self.random_size = (14, 26)
         self.data_dir = None
-        self.train_ann = "nwpu_trainval.json"
-        self.val_ann = "nwpu_test.json"
+        self.train_ann = "train.json"
+        self.val_ann = "test.json"
 
         # --------------- transform config ----------------- #
         self.mosaic_prob = 1.0
@@ -51,11 +51,11 @@ class Nwpu_Exp(BaseExp):
 
         # --------------  training config --------------------- #
         self.warmup_epochs = 5
-        self.max_epoch = 300
+        self.max_epoch = 150
         self.warmup_lr = 0
         self.basic_lr_per_img = 0.01 / 64
         self.scheduler = "yoloxwarmcos"
-        self.no_aug_epochs = 15
+        self.no_aug_epochs = 25
         self.min_lr_ratio = 0.05
         self.ema = True
 
@@ -97,7 +97,7 @@ class Nwpu_Exp(BaseExp):
             InfiniteSampler,
             MosaicDetection,
             worker_init_reset_seed,
-            DIORDataset,
+            NWPUDataset,
         )
         from yolori.utils import (
             wait_for_the_master,
@@ -106,9 +106,7 @@ class Nwpu_Exp(BaseExp):
         local_rank = get_local_rank()
 
         with wait_for_the_master(local_rank):
-            dataset = DIORDataset(
-                data_dir="/Home/guest/Datasets/nwpu" if self.data_dir is None else self.data_dir,
-                json_file=self.train_ann,
+            dataset = NWPUDataset(
                 img_size=self.input_size,
                 preproc=TrainTransform(
                     max_labels=300, flip_prob=self.flip_prob, hsv_prob=self.hsv_prob),
@@ -233,9 +231,8 @@ class Nwpu_Exp(BaseExp):
         return scheduler
 
     def get_eval_loader(self, batch_size, is_distributed, testdev=False, legacy=False):
-        from yolori.data import ValTransform, DIORDataset
-        valdataset = DIORDataset(
-            data_dir="/Home/guest/Datasets/nwpu" if self.data_dir is None else self.data_dir,
+        from yolori.data import ValTransform, NWPUDataset
+        valdataset = NWPUDataset(
             json_file=self.val_ann,
             img_size=self.test_size,
             preproc=ValTransform(legacy=legacy),
@@ -260,7 +257,7 @@ class Nwpu_Exp(BaseExp):
         return val_loader
 
     def get_evaluator(self, batch_size, is_distributed, testdev=False, legacy=False):
-        from yolori.evaluators import  NWPUEvaluator
+        from yolori.evaluators import NWPUEvaluator
 
         val_loader = self.get_eval_loader(batch_size, is_distributed, testdev, legacy)
         evaluator = NWPUEvaluator(

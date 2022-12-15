@@ -10,3 +10,4 @@ from .dior_classes import DIOR_CLASSES
 from .mosaicdetection import MosaicDetection
 from .voc import VOCDetection
 from .voc_classes import VOC_CLASSES
+from .nwpu import NWPUDataset

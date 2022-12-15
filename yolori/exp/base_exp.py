@@ -19,7 +19,7 @@ class BaseExp(metaclass=ABCMeta):
     """Basic class for any experiment."""
 
     def __init__(self):
-        self.seed = None
+        self.seed = 42
         self.output_dir = "./exp_outputs"
         self.print_interval = 100
         self.eval_interval = 10

@@ -62,15 +62,13 @@ class TaskDecomposition(nn.Module):
         # here we first compute the product between layer attention weight and
         # conv weight, and then compute the convolution between new conv weight
         # and feature map, in order to save memory and FLOPs.
-        conv_weight = weight.reshape(
-            b, 1, self.stacked_convs,
-            1) * self.reduction_conv.conv.weight.reshape(
-            1, self.feat_channels, self.stacked_convs, self.feat_channels)
+        conv_weight = \
+            weight.reshape(b, 1, self.stacked_convs, 1) * \
+            self.reduction_conv.conv.weight.reshape(1, self.feat_channels, self.stacked_convs, self.feat_channels)
         conv_weight = conv_weight.reshape(b, self.feat_channels,
                                           self.in_channels)
         feat = feat.reshape(b, self.in_channels, h * w)
-        feat = torch.bmm(conv_weight, feat).reshape(b, self.feat_channels, h,
-                                                    w)
+        feat = torch.bmm(conv_weight, feat).reshape(b, self.feat_channels, h, w)
         if self.reduction_conv.bn is not None:
             feat = self.reduction_conv.bn(feat)
         feat = self.reduction_conv.act(feat)
@@ -86,11 +84,13 @@ class TOODHead(YOLOXHead):
                  in_channels=[256, 512, 1024],
                  act="silu",
                  depthwise=False,
-                 stacked_convs=3,
-                 la_down_rate=32):
+                 stacked_convs=6,
+                 la_down_rate=8,
+                 iou_type="giou",
+                 l1_type="l1loss"):
         super(TOODHead, self).__init__(
             num_classes=num_classes, width=width, strides=strides, in_channels=in_channels, act=act,
-            depthwise=depthwise, )
+            depthwise=depthwise, iou_type=iou_type, l1_type=l1_type)
         self.width = width
         self.stacked_convs = stacked_convs
         self.feat_channels = int(256 * self.width)
@@ -101,15 +101,15 @@ class TOODHead(YOLOXHead):
         for i in range(len(in_channels)):
             self.cls_decomps.append(
                 TaskDecomposition(self.feat_channels, self.stacked_convs,
-                                  self.stacked_convs * la_down_rate,))
+                                  self.stacked_convs * la_down_rate, ))
             self.reg_decomps.append(
                 TaskDecomposition(self.feat_channels, self.stacked_convs,
-                                  self.stacked_convs * la_down_rate,))
+                                  self.stacked_convs * la_down_rate, ))
         for i in range(self.stacked_convs):
             chn = self.feat_channels
 
             self.inter_convs.append(
-                BaseConv(chn, self.feat_channels, 3,stride=1))
+                BaseConv(chn, self.feat_channels, 3, stride=1))
 
     def forward(self, xin, labels=None, imgs=None):
         outputs = []
@@ -120,8 +120,8 @@ class TOODHead(YOLOXHead):
 
         for k, (cls_decomp, reg_decomp, cls_conv, reg_conv, stride_this_level,
                 x) in enumerate(
-                    zip(self.cls_decomps, self.reg_decomps, self.cls_convs,
-                        self.reg_convs, self.strides, xin)):
+            zip(self.cls_decomps, self.reg_decomps, self.cls_convs,
+                self.reg_convs, self.strides, xin)):
             x = self.stems[k](x)
 
             inter_feats = []
@@ -150,7 +150,7 @@ class TOODHead(YOLOXHead):
                 expanded_strides.append(
                     torch.zeros(
                         1, grid.shape[1]).fill_(stride_this_level).type_as(
-                            xin[0]))
+                        xin[0]))
                 if self.use_l1:
                     batch_size = reg_output.shape[0]
                     hsize, wsize = reg_output.shape[-2:]

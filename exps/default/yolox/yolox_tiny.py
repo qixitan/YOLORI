@@ -1,6 +1,6 @@
-# -*- coding: UTF-8 -*-
-# @Author: qixitan
-# @Time: 2022/10/24
+#!/usr/bin/env python3
+# -*- coding:utf-8 -*-
+# Copyright (c) Megvii, Inc. and its affiliates.
 
 import os
 

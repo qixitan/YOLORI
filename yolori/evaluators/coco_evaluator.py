@@ -28,30 +28,6 @@ from yolori.utils import (
     xyxy2xywh
 )
 
-
-# DIOR_CLASSES = (
-#      "airplane",
-#      "airport",
-#      "baseballfield",
-#      "basketballcourt",
-#      "bridge",
-#      "chimney",
-#      "dam",
-#      "Expressway-Service-area",
-#      "Expressway-toll-station",
-#      "golffield",
-#      "groundtrackfield",
-#      "harbor",
-#      "overpass",
-#      "ship",
-#      "stadium",
-#      "storagetank",
-#      "tenniscourt",
-#      "trainstation",
-#      "vehicle",
-#      "windmill"
-# )
-
 def per_class_mAP_table(coco_eval, class_names=COCO_CLASSES, headers=["class", "AP"], colums=6):
     per_class_mAP = {}
     precisions = coco_eval.eval["precision"]
@@ -529,20 +505,6 @@ class NWPUEvaluator:
         decoder=None,
         test_size=None,
     ):
-        """
-        COCO average precision (AP) Evaluation. Iterate inference on the test dataset
-        and the results are evaluated by COCO API.
-
-        NOTE: This function will change training mode to False, please save states if needed.
-
-        Args:
-            model : model to evaluate.
-
-        Returns:
-            ap50_95 (float) : COCO AP of IoU=50:95
-            ap50 (float) : COCO AP of IoU=50
-            summary (sr): summary info of evaluation.
-        """
         # TODO half to amp_test
         tensor_type = torch.cuda.HalfTensor if half else torch.cuda.FloatTensor
         model = model.eval()

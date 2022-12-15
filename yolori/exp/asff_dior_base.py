@@ -4,7 +4,7 @@
 
 from torch import nn
 
-from .yolox_dior_base import YoloX_Dior_Exp as BaseExp
+from .dior_base import Dior_Exp as BaseExp
 
 
 class ASFF_Dior_Exp(BaseExp):

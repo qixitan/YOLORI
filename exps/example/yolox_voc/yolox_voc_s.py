@@ -4,8 +4,8 @@ import os
 import torch
 import torch.distributed as dist
 
-from yolox.data import get_yolox_datadir
-from yolox.exp import Exp as MyExp
+from yolori.data import get_yolori_datadir
+from yolori.exp import Exp as MyExp
 
 
 class Exp(MyExp):
@@ -25,7 +25,7 @@ class Exp(MyExp):
         self.exp_name = os.path.split(os.path.realpath(__file__))[1].split(".")[0]
 
     def get_data_loader(self, batch_size, is_distributed, no_aug=False, cache_img=False):
-        from yolox.data import (
+        from yolori.data import (
             VOCDetection,
             TrainTransform,
             YoloBatchSampler,
@@ -34,7 +34,7 @@ class Exp(MyExp):
             MosaicDetection,
             worker_init_reset_seed,
         )
-        from yolox.utils import (
+        from yolori.utils import (
             wait_for_the_master,
             get_local_rank,
         )
@@ -97,7 +97,7 @@ class Exp(MyExp):
         return train_loader
 
     def get_eval_loader(self, batch_size, is_distributed, testdev=False, legacy=False):
-        from yolox.data import VOCDetection, ValTransform
+        from yolori.data import VOCDetection, ValTransform
 
         valdataset = VOCDetection(
             data_dir=os.path.join(get_yolox_datadir(), "VOCdevkit"),
@@ -125,7 +125,7 @@ class Exp(MyExp):
         return val_loader
 
     def get_evaluator(self, batch_size, is_distributed, testdev=False, legacy=False):
-        from yolox.evaluators import VOCEvaluator
+        from yolori.evaluators import VOCEvaluator
 
         val_loader = self.get_eval_loader(batch_size, is_distributed, testdev, legacy)
         evaluator = VOCEvaluator(

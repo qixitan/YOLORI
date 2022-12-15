@@ -5,7 +5,7 @@
 import torch
 from torch import nn
 from .darknet import CSPDarknet
-from .network_blocks import SCA
+from .network_blocks import NonlocalAttention
 
 
 class NONeck(nn.Module):
@@ -92,7 +92,7 @@ class NONeck2(nn.Module):
         self.conv = nn.Conv2d(int(sum(in_channels)*width), int(in_channels[1]*width), kernel_size=1, stride=1,
                               padding=0)
 
-        self._nonlocal = SCA(int(in_channels[1] * width))
+        self._nonlocal = NonlocalAttention(int(in_channels[1] * width))
 
     def forward(self, input):
         #  backbone

@@ -285,13 +285,13 @@ class Focus(nn.Module):
 
 
 # Attention block
-class SCA(nn.Module):
+class NonlocalAttention(nn.Module):
     """
     Self-Channels Attention
     """
 
     def __init__(self, in_channels, mode="embedded_gaussian"):
-        super(SCA, self).__init__()
+        super(NonlocalAttention, self).__init__()
         assert mode in ['embedded_gaussian', 'dot_product']
         self.inplanes = in_channels
         self.mode = mode
@@ -325,6 +325,7 @@ class SCA(nn.Module):
             pairwise_weight = self.embedded_gaussian(theta_x, phi_x)
         else:
             pairwise_weight = self.dot_product(theta_x, phi_x)
+        print(pairwise_weight.shae)
         y = torch.matmul(pairwise_weight, g_x)
         y = y.permute(0, 2, 1).reshape(b, self.hiden_planes, h, w).contiguous()
         out = x + self.out(y)
@@ -364,6 +365,7 @@ class ECA(nn.Module):
         y = self.conv(y.squeeze(-1).transpose(-1, -2)).transpose(-1, -2).unsqueeze(-1)
         y = self.sigmoid(y)
         return x * y.expand_as(x)
+
 
 class KSEBlock(nn.Module):
     def __init__(self, in_channels, k=8, act="relu"):

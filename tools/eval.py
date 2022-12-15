@@ -72,7 +72,7 @@ def main(exp, args, num_gpu):
     cudnn.benchmark = True
 
     rank = get_local_rank()
-
+    exp.val_ann = "DIOR2018_test.json"
     file_name = os.path.join(exp.output_dir, args.experiment_name,
                              max(os.listdir(os.path.join(exp.output_dir, args.experiment_name))))
 

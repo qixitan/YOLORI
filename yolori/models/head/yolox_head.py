@@ -27,6 +27,8 @@ class YOLOXHead(nn.Module):
         in_channels=[256, 512, 1024],
         act="silu",
         depthwise=False,
+        iou_type="iou",
+        l1_type ="l1loss"
     ):
         """
         Args:
@@ -126,9 +128,12 @@ class YOLOXHead(nn.Module):
             )
 
         self.use_l1 = False
-        self.l1_loss = nn.L1Loss(reduction="none")
-        self.bcewithlog_loss = nn.BCEWithLogitsLoss(reduction="none")
-        self.iou_loss = IOUloss(reduction="none")
+        if l1_type == "l1loss":
+            self.l1_loss = nn.L1Loss(reduction="none")
+        elif l1_type == "l1smooth":
+            self.l1_loss = nn.SmoothL1Loss(reduction="none")
+        self.bcewithlog_loss = nn.BCEWithLogitsLoss( reduction="none")
+        self.iou_loss = IOUloss(reduction="none", loss_type=iou_type)
         self.strides = strides
         self.grids = [torch.zeros(1)] * len(in_channels)
 
@@ -692,6 +697,7 @@ class YOLOXHeadN(nn.Module):
         in_channels=[256, 512, 1024],
         act="silu",
         depthwise=False,
+        iou_type="iou"
     ):
         """
         Args:
@@ -793,7 +799,7 @@ class YOLOXHeadN(nn.Module):
         self.use_l1 = False
         self.l1_loss = nn.L1Loss(reduction="none")
         self.bcewithlog_loss = nn.BCEWithLogitsLoss(reduction="none")
-        self.iou_loss = IOUloss(reduction="none")
+        self.iou_loss = IOUloss(reduction="none", loss_type=iou_type)
         self.strides = strides
         self.grids = [torch.zeros(1)] * len(in_channels)
 
@@ -1319,6 +1325,7 @@ class CoupleHead(nn.Module):
         in_channels=[256, 512, 1024],
         act="silu",
         depthwise=False,
+        iou_type="iou"
     ):
         """
         Args:
@@ -1380,7 +1387,7 @@ class CoupleHead(nn.Module):
         self.use_l1 = False
         self.l1_loss = nn.L1Loss(reduction="none")
         self.bcewithlog_loss = nn.BCEWithLogitsLoss(reduction="none")
-        self.iou_loss = IOUloss(reduction="none")
+        self.iou_loss = IOUloss(reduction="none", loss_type=iou_type)
         self.strides = strides
         self.grids = [torch.zeros(1)] * len(in_channels)
 

@@ -116,6 +116,7 @@ class ASFF_Block2(nn.Module):
         else:
             return out
 
+
 class ASFF_Block3(nn.Module):
     def __init__(self, level, multiplier=1.0, rfb=False, vis=False):
         """

@@ -3,10 +3,8 @@
 # Copyright (c) Megvii, Inc. and its affiliates.
 
 import os
-
-import torch.nn as nn
-
-from yolori.exp import Exp as MyExp
+from torch import nn
+from yolori.exp import Nwpu_Exp as MyExp
 
 
 class Exp(MyExp):
@@ -17,17 +15,23 @@ class Exp(MyExp):
         self.exp_name = os.path.split(os.path.realpath(__file__))[1].split(".")[0]
 
     def get_model(self, sublinear=False):
+
         def init_yolo(M):
             for m in M.modules():
                 if isinstance(m, nn.BatchNorm2d):
                     m.eps = 1e-3
                     m.momentum = 0.03
         if "model" not in self.__dict__:
-            from yolox.models import YOLOX, YOLOFPN, YOLOXHead
-            backbone = YOLOFPN()
-            head = YOLOXHead(self.num_classes, self.width, in_channels=[128, 256, 512], act="lrelu")
-            self.model = YOLOX(backbone, head)
+            from yolori.models.backbone import CSPDarknet
+            from yolori.models.neck import PAFPN
+            from yolori.models.head import YOLOXHead, TOODHead
+            from yolori.models import Builder
+            in_channels = [256, 512, 1024]
+            backbone = CSPDarknet(self.depth, self.width)
+            neck = PAFPN(self.depth, self.width)
+            head = TOODHead(self.num_classes, self.width, in_channels=in_channels, act=self.act, iou_type="giou", stacked_convs=3)
+            self.model = Builder(backbone, neck, head)
+
         self.model.apply(init_yolo)
         self.model.head.initialize_biases(1e-2)
-
         return self.model

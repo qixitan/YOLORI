@@ -35,8 +35,8 @@ class Dior_Exp(BaseExp):
         # You can uncomment this line to specify a multiscale range
         # self.random_size = (14, 26)
         self.data_dir = None
-        self.train_ann = "DIOR2018_trainval.json"
-        self.val_ann = "DIOR2018_test.json"
+        self.train_ann = None
+        self.val_ann = None
 
         # --------------- transform config ----------------- #
         self.mosaic_prob = 1.0
@@ -108,21 +108,21 @@ class Dior_Exp(BaseExp):
         local_rank = get_local_rank()
 
         with wait_for_the_master(local_rank):
-            # dataset = DIORDetection(
-            #     data_dir="/Home/guest/Datasets/DIORdevkit",
-            #     image_sets=[("2018", "train"), ("2018", "val")],
-            #     img_size=self.input_size,
-            #     preproc=TrainTransform(max_labels=300, flip_prob=self.flip_prob, hsv_prob=self.hsv_prob),
-            #     cache=cache_img
-            # )
-            dataset = DIORDataset(
-                data_dir="/Home/guest/Datasets/DIORdevkit/DIOR2018" if self.data_dir is None else self.data_dir,
-                json_file=self.train_ann,
+            dataset = DIORDetection(
+                data_dir="/Home/guest/Datasets/DIORdevkit",
+                image_sets=[("2018", "train"), ("2018", "val")],
                 img_size=self.input_size,
-                preproc=TrainTransform(
-                    max_labels=300, flip_prob=self.flip_prob, hsv_prob=self.hsv_prob),
-                cache=cache_img,
+                preproc=TrainTransform(max_labels=300, flip_prob=self.flip_prob, hsv_prob=self.hsv_prob),
+                cache=cache_img
             )
+            # dataset = DIORDataset(
+            #     data_dir="/Home/guest/Datasets/DIORdevkit/DIOR2018" if self.data_dir is None else self.data_dir,
+            #     json_file=self.train_ann,
+            #     img_size=self.input_size,
+            #     preproc=TrainTransform(
+            #         max_labels=300, flip_prob=self.flip_prob, hsv_prob=self.hsv_prob),
+            #     cache=cache_img,
+            # )
 
         dataset = MosaicDetection(
             dataset=dataset,
@@ -244,18 +244,18 @@ class Dior_Exp(BaseExp):
     def get_eval_loader(self, batch_size, is_distributed, testdev=False, legacy=False):
         from yolori.data import DIORDetection, ValTransform, DIORDataset
 
-        # valdataset = DIORDetection(
-        #     data_dir="/Home/guest/Datasets/DIORdevkit",
-        #     image_sets=[("2018", "test")],
-        #     img_size=self.test_size,
-        #     preproc=ValTransform(legacy=legacy),
-        # )
-        valdataset = DIORDataset(
-            data_dir="/Home/guest/Datasets/DIORdevkit/DIOR2018" if self.data_dir is None else self.data_dir,
-            json_file=self.val_ann,
+        valdataset = DIORDetection(
+            data_dir="/Home/guest/Datasets/DIORdevkit",
+            image_sets=[("2018", "test")],
             img_size=self.test_size,
             preproc=ValTransform(legacy=legacy),
         )
+        # valdataset = DIORDataset(
+        #     data_dir="/Home/guest/Datasets/DIORdevkit/DIOR2018" if self.data_dir is None else self.data_dir,
+        #     json_file=self.val_ann,
+        #     img_size=self.test_size,
+        #     preproc=ValTransform(legacy=legacy),
+        # )
 
         if is_distributed:
             batch_size = batch_size // dist.get_world_size()
@@ -276,26 +276,23 @@ class Dior_Exp(BaseExp):
         return val_loader
 
     def get_evaluator(self, batch_size, is_distributed, testdev=False, legacy=False):
-        # from yolori.evaluators import VOCEvaluator
-        # val_loader = self.get_eval_loader(batch_size, is_distributed, testdev, legacy)
-        # evaluator = VOCEvaluator(
-        #     dataloader=val_loader,
-        #     img_size=self.test_size,
-        #     confthre=self.test_conf,
-        #     nmsthre=self.nmsthre,
-        #     num_classes=self.num_classes,
-        # )
-        from yolori.evaluators import DIOREvaluator
-
+        from yolori.evaluators import VOCEvaluator, DIOREvaluator
         val_loader = self.get_eval_loader(batch_size, is_distributed, testdev, legacy)
-        evaluator = DIOREvaluator(
+        evaluator = VOCEvaluator(
             dataloader=val_loader,
             img_size=self.test_size,
             confthre=self.test_conf,
             nmsthre=self.nmsthre,
             num_classes=self.num_classes,
-            testdev=testdev,
         )
+        # evaluator = DIOREvaluator(
+        #     dataloader=val_loader,
+        #     img_size=self.test_size,
+        #     confthre=self.test_conf,
+        #     nmsthre=self.nmsthre,
+        #     num_classes=self.num_classes,
+        #     testdev=testdev,
+        # )
         return evaluator
 
     def eval(self, model, evaluator, is_distributed, half=False):

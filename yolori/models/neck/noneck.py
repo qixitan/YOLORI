@@ -83,7 +83,7 @@ class NoNeck1(nn.Module):
         out4 = self.out4(integrates)
         out5 = self.out5(F.max_pool2d(integrates, kernel_size=2))
         out = (out3, out4, out5)
-        print(out3.shape, out4.shape, out5.shape)
+        # print(out3.shape, out4.shape, out5.shape)
         return out
 
 

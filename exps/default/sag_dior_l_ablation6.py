@@ -4,7 +4,7 @@
 
 import os
 from torch import nn
-from yolori.exp import Nwpu_Exp as MyExp
+from yolori.exp import Dior_Exp as MyExp
 
 
 class Exp(MyExp):
@@ -23,13 +23,14 @@ class Exp(MyExp):
                     m.momentum = 0.03
         if "model" not in self.__dict__:
             from yolori.models.backbone import CSPDarknet
-            from yolori.models.neck import PAFPN
-            from yolori.models.head import YOLOXHead, TOODHead
+            from yolori.models.neck import PAFPN, PAFPN_ASFF, PAFPN_CG
+            from yolori.models.head import YOLOXHead
             from yolori.models import Builder
             in_channels = [256, 512, 1024]
-            backbone = CSPDarknet(self.depth, self.width)
-            neck = PAFPN(self.depth, self.width)
-            head = TOODHead(self.num_classes, self.width, in_channels=in_channels, act=self.act, stacked_convs=2, iou_type="iou")
+            in_features = ("dark3", "dark4", "dark5")
+            backbone = CSPDarknet(self.depth, self.width, act=self.act)
+            neck = PAFPN_CG(width=self.width, in_features=in_features)
+            head = YOLOXHead(self.num_classes, self.width, in_channels=in_channels, act=self.act, iou_type="iou")
             self.model = Builder(backbone, neck, head)
 
         self.model.apply(init_yolo)

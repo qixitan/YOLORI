@@ -24,12 +24,12 @@ class Exp(MyExp):
         if "model" not in self.__dict__:
             from yolori.models.backbone import CSPDarknet
             from yolori.models.neck import PAFPN
-            from yolori.models.head import YOLOXHead, TOODHead
+            from yolori.models.head import YOLOXHead, TAHead
             from yolori.models import Builder
             in_channels = [256, 512, 1024]
-            backbone = CSPDarknet(self.depth, self.width)
+            backbone = CSPDarknet(self.depth, self.width, act=self.act)
             neck = PAFPN(self.depth, self.width)
-            head = TOODHead(self.num_classes, self.width, in_channels=in_channels, act=self.act, stacked_convs=2, iou_type="iou")
+            head = TAHead(self.num_classes, self.width, in_channels=in_channels, act=self.act, iou_type="ciou")
             self.model = Builder(backbone, neck, head)
 
         self.model.apply(init_yolo)

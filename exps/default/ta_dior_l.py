@@ -22,15 +22,15 @@ class Exp(MyExp):
                     m.eps = 1e-3
                     m.momentum = 0.03
         if "model" not in self.__dict__:
-            from yolori.models.backbone import CSPDarknet, RepVGGYOLOX
+            from yolori.models.backbone import CSPDarknet, Cascade_CSPDarknet
             from yolori.models.neck import PAFPN
-            from yolori.models.head import YOLOXHead, TOODHead
+            from yolori.models.head import YOLOXHead, TAHead
             from yolori.models import Builder
             in_channels = [256, 512, 1024]
             out_features = ("stage3", "stage4", "stage5")
-            backbone = RepVGGYOLOX(depth=self.depth, width=self.width)
+            backbone = Cascade_CSPDarknet(dep_mul=self.depth, wid_mul=self.width)
             neck = PAFPN(self.depth, self.width, in_features=out_features)
-            head = TOODHead(self.num_classes, self.width, in_channels=in_channels, act=self.act, iou_type="iou")
+            head = TAHead(self.num_classes, self.width, in_channels=in_channels, act=self.act, iou_type="ciou")
             self.model = Builder(backbone, neck, head)
 
         self.model.apply(init_yolo)

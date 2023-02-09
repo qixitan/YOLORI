@@ -21,6 +21,7 @@ class Exp(MyExp):
                 if isinstance(m, nn.BatchNorm2d):
                     m.eps = 1e-3
                     m.momentum = 0.03
+
         if "model" not in self.__dict__:
             from yolori.models.backbone import CSPDarknet
             from yolori.models.neck import PAFPN
@@ -29,7 +30,8 @@ class Exp(MyExp):
             in_channels = [256, 512, 1024]
             backbone = CSPDarknet(self.depth, self.width)
             neck = PAFPN(self.depth, self.width)
-            head = TOODHead(self.num_classes, self.width, in_channels=in_channels, act=self.act, stacked_convs=2, iou_type="iou")
+            head = TOODHead(self.num_classes, self.width, in_channels=in_channels, act=self.act, stacked_convs=3,
+                            la_down_rate=32, iou_type="iou")
             self.model = Builder(backbone, neck, head)
 
         self.model.apply(init_yolo)

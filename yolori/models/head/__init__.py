@@ -3,6 +3,6 @@
 # @Time: 2022/12/2
 
 from .tood import TOODHead
-from .yolox_head import CoupleHead, YOLOXHead, YOLOXHeadN
+from .yolox_head import CoupleHead, TAHead, YOLOXHead, YOLOXHeadN
 
-__all__ = ["CoupleHead", "TOODHead", "YOLOXHead", "YOLOXHeadN"]
+__all__ = ["CoupleHead", "TOODHead", "YOLOXHead", "YOLOXHeadN", "TAHead"]

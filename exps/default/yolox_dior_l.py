@@ -13,6 +13,7 @@ class Exp(MyExp):
         self.depth = 1.0
         self.width = 1.0
         self.exp_name = os.path.split(os.path.realpath(__file__))[1].split(".")[0]
+        # self.max_epoch = 200
 
     def get_model(self, sublinear=False):
 
@@ -23,13 +24,12 @@ class Exp(MyExp):
                     m.momentum = 0.03
         if "model" not in self.__dict__:
             from yolori.models.backbone import CSPDarknet
-            from yolori.models.neck import PAFPN, SGNonlocalAttention
+            from yolori.models.neck import PAFPN
             from yolori.models.head import YOLOXHead
             from yolori.models import Builder
             in_channels = [256, 512, 1024]
-            in_features = ("dark3", "dark4", "dark5")
             backbone = CSPDarknet(self.depth, self.width, act=self.act)
-            neck = SGNonlocalAttention(self.width, in_features=in_features)
+            neck = PAFPN(self.depth, self.width)
             head = YOLOXHead(self.num_classes, self.width, in_channels=in_channels, act=self.act, iou_type="iou")
             self.model = Builder(backbone, neck, head)
 

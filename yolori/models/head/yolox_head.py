@@ -14,21 +14,20 @@ from yolori.utils import bboxes_iou
 from yolori.models.losses import IOUloss
 from yolori.models.network_blocks import BaseConv, DWConv
 
-
-__all__ = ["YOLOXHead", "YOLOXHeadN", "CoupleHead"]
+__all__ = ["YOLOXHead", "YOLOXHeadN", "CoupleHead", "TAHead"]
 
 
 class YOLOXHead(nn.Module):
     def __init__(
-        self,
-        num_classes,
-        width=1.0,
-        strides=[8, 16, 32],
-        in_channels=[256, 512, 1024],
-        act="silu",
-        depthwise=False,
-        iou_type="iou",
-        l1_type ="l1loss"
+            self,
+            num_classes,
+            width=1.0,
+            strides=[8, 16, 32],
+            in_channels=[256, 512, 1024],
+            act="silu",
+            depthwise=False,
+            iou_type="iou",
+            l1_type="l1loss"
     ):
         """
         Args:
@@ -132,7 +131,7 @@ class YOLOXHead(nn.Module):
             self.l1_loss = nn.L1Loss(reduction="none")
         elif l1_type == "l1smooth":
             self.l1_loss = nn.SmoothL1Loss(reduction="none")
-        self.bcewithlog_loss = nn.BCEWithLogitsLoss( reduction="none")
+        self.bcewithlog_loss = nn.BCEWithLogitsLoss(reduction="none")
         self.iou_loss = IOUloss(reduction="none", loss_type=iou_type)
         self.strides = strides
         self.grids = [torch.zeros(1)] * len(in_channels)
@@ -156,7 +155,7 @@ class YOLOXHead(nn.Module):
         expanded_strides = []
 
         for k, (cls_conv, reg_conv, stride_this_level, x) in enumerate(
-            zip(self.cls_convs, self.reg_convs, self.strides, xin)
+                zip(self.cls_convs, self.reg_convs, self.strides, xin)
         ):
             x = self.stems[k](x)
             cls_x = x
@@ -180,8 +179,8 @@ class YOLOXHead(nn.Module):
                 y_shifts.append(grid[:, :, 1])  # y相对于左上角的偏移量  【1， w*h， 1】
                 expanded_strides.append(
                     torch.zeros(1, grid.shape[1])
-                    .fill_(stride_this_level)
-                    .type_as(xin[0])
+                        .fill_(stride_this_level)
+                        .type_as(xin[0])
                 )  # grid.shape[1] 当前尺度表示全图有多少个格点（anchor*w*h）---多少个预测框
                 # 填充当前尺寸下的缩小倍数  【1， anchor*w*h】
                 if self.use_l1:
@@ -202,7 +201,6 @@ class YOLOXHead(nn.Module):
                 )  # 【batch_size, channels（4+1(sigmoid)+num_classes(sigmoid））， w, h】  sigmoid【0，1】
 
             outputs.append(output)
-
 
         if self.training:
             return self.get_losses(
@@ -235,11 +233,11 @@ class YOLOXHead(nn.Module):
         :return:  output调整到与原图相同尺寸大小的输出 并且维度为【batch_size, anchor(1)*w*h, num_channels(x、y、w、h、1、num_classes)】
                 grids-格点左上角坐标【batch_size, anchor*w*h, 2】
         """
-        grid = self.grids[k]    # torch.zeros(0)  表示当前格点左上角的坐标
+        grid = self.grids[k]  # torch.zeros(0)  表示当前格点左上角的坐标
 
         batch_size = output.shape[0]  # batch_size
         n_ch = 5 + self.num_classes
-        hsize, wsize = output.shape[-2:]   # 每个尺度下的特征图高宽
+        hsize, wsize = output.shape[-2:]  # 每个尺度下的特征图高宽
         if grid.shape[2:4] != output.shape[2:4]:
             yv, xv = torch.meshgrid([torch.arange(hsize), torch.arange(wsize)])
             """yv:                                       xv:
@@ -283,15 +281,15 @@ class YOLOXHead(nn.Module):
         return outputs
 
     def get_losses(
-        self,
-        imgs,
-        x_shifts,
-        y_shifts,
-        expanded_strides,
-        labels,
-        outputs,
-        origin_preds,
-        dtype,
+            self,
+            imgs,
+            x_shifts,
+            y_shifts,
+            expanded_strides,
+            labels,
+            outputs,
+            origin_preds,
+            dtype,
     ):
         bbox_preds = outputs[:, :, :4]  # [batch, n_anchors_all, 4]  锚框预测
         obj_preds = outputs[:, :, 4].unsqueeze(-1)  # [batch, n_anchors_all, 1]  是否有物体
@@ -345,13 +343,13 @@ class YOLOXHead(nn.Module):
                         batch_idx,  # 此张图片在batch中的id
                         num_gt,  # 此张图片上真实框的个数
                         total_num_anchors,  # 预测的总计多少个框（全部特征尺度）
-                        gt_bboxes_per_image,   # 此张图片的真实框标签
+                        gt_bboxes_per_image,  # 此张图片的真实框标签
                         gt_classes,  # 此张图片每个真实框对应的类别
                         bboxes_preds_per_image,  # 此张图片的预测框（x， y， w， h）
                         expanded_strides,  # 【1， anchor*w*h*3】~~*3表示三个尺度的
                         x_shifts,  # x相对于左上角的偏移量  多个尺度的
                         y_shifts,  # y相对于左上角的偏移量 多个尺度的
-                        cls_preds,   # [batch, n_anchors_all, n_cls] 类别预测
+                        cls_preds,  # [batch, n_anchors_all, n_cls] 类别预测
                         bbox_preds,  # [batch, n_anchors_all, 4]  锚框预测
                         obj_preds,  # [batch, n_anchors_all, 1]  是否有物体
                         labels,  # 【batch_size, num， 4（x，y， w， h）】
@@ -421,20 +419,20 @@ class YOLOXHead(nn.Module):
 
         num_fg = max(num_fg, 1)
         loss_iou = (
-            self.iou_loss(bbox_preds.view(-1, 4)[fg_masks], reg_targets)
-        ).sum() / num_fg
+                       self.iou_loss(bbox_preds.view(-1, 4)[fg_masks], reg_targets)
+                   ).sum() / num_fg
         loss_obj = (
-            self.bcewithlog_loss(obj_preds.view(-1, 1), obj_targets)
-        ).sum() / num_fg
+                       self.bcewithlog_loss(obj_preds.view(-1, 1), obj_targets)
+                   ).sum() / num_fg
         loss_cls = (
-            self.bcewithlog_loss(
-                cls_preds.view(-1, self.num_classes)[fg_masks], cls_targets
-            )
-        ).sum() / num_fg
+                       self.bcewithlog_loss(
+                           cls_preds.view(-1, self.num_classes)[fg_masks], cls_targets
+                       )
+                   ).sum() / num_fg
         if self.use_l1:
             loss_l1 = (
-                self.l1_loss(origin_preds.view(-1, 4)[fg_masks], l1_targets)
-            ).sum() / num_fg
+                          self.l1_loss(origin_preds.view(-1, 4)[fg_masks], l1_targets)
+                      ).sum() / num_fg
         else:
             loss_l1 = 0.0
 
@@ -459,22 +457,22 @@ class YOLOXHead(nn.Module):
 
     @torch.no_grad()
     def get_assignments(
-        self,
-        batch_idx,  # 此张图片在batch中的id
-        num_gt,  # 此张图片上真实框的个数
-        total_num_anchors,  # 预测的总计多少个框（全部特征尺度）
-        gt_bboxes_per_image,  # 此张图片的真实框标签
-        gt_classes,  # 此张图片每个真实框对应的类别
-        bboxes_preds_per_image,  # 此张图片的预测框（x， y， w， h）
-        expanded_strides,   # 【1， n_anchor_all】~三个尺度的
-        x_shifts,  # x相对于左上角的偏移量  多个尺度的
-        y_shifts,  # y相对于左上角的偏移量 多个尺度的
-        cls_preds,  # [batch, n_anchors_all, n_cls] 类别预测
-        bbox_preds,  # [batch, n_anchors_all, 4]  锚框预测
-        obj_preds,  # [batch, n_anchors_all, 1]  是否有物体
-        labels,  # 【batch_size, num， 4（x，y， w， h）】
-        imgs,
-        mode="gpu",
+            self,
+            batch_idx,  # 此张图片在batch中的id
+            num_gt,  # 此张图片上真实框的个数
+            total_num_anchors,  # 预测的总计多少个框（全部特征尺度）
+            gt_bboxes_per_image,  # 此张图片的真实框标签
+            gt_classes,  # 此张图片每个真实框对应的类别
+            bboxes_preds_per_image,  # 此张图片的预测框（x， y， w， h）
+            expanded_strides,  # 【1， n_anchor_all】~三个尺度的
+            x_shifts,  # x相对于左上角的偏移量  多个尺度的
+            y_shifts,  # y相对于左上角的偏移量 多个尺度的
+            cls_preds,  # [batch, n_anchors_all, n_cls] 类别预测
+            bbox_preds,  # [batch, n_anchors_all, 4]  锚框预测
+            obj_preds,  # [batch, n_anchors_all, 1]  是否有物体
+            labels,  # 【batch_size, num， 4（x，y， w， h）】
+            imgs,
+            mode="gpu",
     ):
 
         if mode == "cpu":
@@ -508,9 +506,9 @@ class YOLOXHead(nn.Module):
 
         gt_cls_per_image = (
             F.one_hot(gt_classes.to(torch.int64), self.num_classes)
-            .float()
-            .unsqueeze(1)
-            .repeat(1, num_in_boxes_anchor, 1)
+                .float()
+                .unsqueeze(1)
+                .repeat(1, num_in_boxes_anchor, 1)
         )
         pair_wise_ious_loss = -torch.log(pair_wise_ious + 1e-8)
 
@@ -519,8 +517,8 @@ class YOLOXHead(nn.Module):
 
         with torch.cuda.amp.autocast(enabled=False):
             cls_preds_ = (
-                cls_preds_.float().unsqueeze(0).repeat(num_gt, 1, 1).sigmoid_()
-                * obj_preds_.float().unsqueeze(0).repeat(num_gt, 1, 1).sigmoid_()
+                    cls_preds_.float().unsqueeze(0).repeat(num_gt, 1, 1).sigmoid_()
+                    * obj_preds_.float().unsqueeze(0).repeat(num_gt, 1, 1).sigmoid_()
             )
             pair_wise_cls_loss = F.binary_cross_entropy(
                 cls_preds_.sqrt_(), gt_cls_per_image, reduction="none"
@@ -528,9 +526,9 @@ class YOLOXHead(nn.Module):
         del cls_preds_
 
         cost = (
-            pair_wise_cls_loss
-            + 3.0 * pair_wise_ious_loss
-            + 100000.0 * (~is_in_boxes_and_center)
+                pair_wise_cls_loss
+                + 3.0 * pair_wise_ious_loss
+                + 100000.0 * (~is_in_boxes_and_center)
         )
 
         (
@@ -556,13 +554,13 @@ class YOLOXHead(nn.Module):
         )
 
     def get_in_boxes_info(
-        self,
-        gt_bboxes_per_image,  # 此张图片的真实框标签
-        expanded_strides,  # 【1， n_anchor_all】~三个尺度的
-        x_shifts,  # x相对于左上角的偏移量  多个尺度的--所有图片的都一样
-        y_shifts,  # y相对于左上角的偏移量  多个尺度的
-        total_num_anchors,  # 预测的总计多少个框（全部特征尺度）
-        num_gt,  # 此张图片上真实框的个数
+            self,
+            gt_bboxes_per_image,  # 此张图片的真实框标签
+            expanded_strides,  # 【1， n_anchor_all】~三个尺度的
+            x_shifts,  # x相对于左上角的偏移量  多个尺度的--所有图片的都一样
+            y_shifts,  # y相对于左上角的偏移量  多个尺度的
+            total_num_anchors,  # 预测的总计多少个框（全部特征尺度）
+            num_gt,  # 此张图片上真实框的个数
     ):
         """
 
@@ -575,39 +573,39 @@ class YOLOXHead(nn.Module):
         :return:   哪些是中心点重合 哪些是中心点和框都
         """
         expanded_strides_per_image = expanded_strides[0]
-        x_shifts_per_image = x_shifts[0] * expanded_strides_per_image   # 在原始图片中每个格点-左上角-相对于-左上角x-的偏移量
-        y_shifts_per_image = y_shifts[0] * expanded_strides_per_image   # 在原始图片中每个格点-左上角-相对于-左上角y-的偏移量
+        x_shifts_per_image = x_shifts[0] * expanded_strides_per_image  # 在原始图片中每个格点-左上角-相对于-左上角x-的偏移量
+        y_shifts_per_image = y_shifts[0] * expanded_strides_per_image  # 在原始图片中每个格点-左上角-相对于-左上角y-的偏移量
         x_centers_per_image = (
             (x_shifts_per_image + 0.5 * expanded_strides_per_image)
-            .unsqueeze(0)
-            .repeat(num_gt, 1)
+                .unsqueeze(0)
+                .repeat(num_gt, 1)
         )  # 在原始图片中每个格点-中心点-相对于-左上角x-的偏移量
         # [n_anchor] -> [n_gt, n_anchor]
         y_centers_per_image = (
             (y_shifts_per_image + 0.5 * expanded_strides_per_image)
-            .unsqueeze(0)
-            .repeat(num_gt, 1)
+                .unsqueeze(0)
+                .repeat(num_gt, 1)
         )  # 在原始图片中每个格点-中心点-相对于-左上角y-的偏移量
 
         gt_bboxes_per_image_l = (
             (gt_bboxes_per_image[:, 0] - 0.5 * gt_bboxes_per_image[:, 2])
-            .unsqueeze(1)
-            .repeat(1, total_num_anchors)
+                .unsqueeze(1)
+                .repeat(1, total_num_anchors)
         )  # 每个-真实框-左上角的x， 并扩展成预测的大小尺度
         gt_bboxes_per_image_r = (
             (gt_bboxes_per_image[:, 0] + 0.5 * gt_bboxes_per_image[:, 2])
-            .unsqueeze(1)
-            .repeat(1, total_num_anchors)
+                .unsqueeze(1)
+                .repeat(1, total_num_anchors)
         )  # 每个-真实框-右下角的x
         gt_bboxes_per_image_t = (
             (gt_bboxes_per_image[:, 1] - 0.5 * gt_bboxes_per_image[:, 3])
-            .unsqueeze(1)
-            .repeat(1, total_num_anchors)
+                .unsqueeze(1)
+                .repeat(1, total_num_anchors)
         )  # 每个-真实框-左上角的y
         gt_bboxes_per_image_b = (
             (gt_bboxes_per_image[:, 1] + 0.5 * gt_bboxes_per_image[:, 3])
-            .unsqueeze(1)
-            .repeat(1, total_num_anchors)
+                .unsqueeze(1)
+                .repeat(1, total_num_anchors)
         )  # 每个-真实框-右下角的y
 
         b_l = x_centers_per_image - gt_bboxes_per_image_l
@@ -616,7 +614,7 @@ class YOLOXHead(nn.Module):
         b_b = gt_bboxes_per_image_b - y_centers_per_image
         bbox_deltas = torch.stack([b_l, b_t, b_r, b_b], 2)
 
-        is_in_boxes = bbox_deltas.min(dim=-1).values > 0.0   # 表示真实框哪些坐标在格点内？
+        is_in_boxes = bbox_deltas.min(dim=-1).values > 0.0  # 表示真实框哪些坐标在格点内？
         is_in_boxes_all = is_in_boxes.sum(dim=0) > 0  # 表示真实框在哪些格点的内？
         # in fixed center
 
@@ -647,7 +645,7 @@ class YOLOXHead(nn.Module):
         is_in_boxes_anchor = is_in_boxes_all | is_in_centers_all
 
         is_in_boxes_and_center = (
-            is_in_boxes[:, is_in_boxes_anchor] & is_in_centers[:, is_in_boxes_anchor]
+                is_in_boxes[:, is_in_boxes_anchor] & is_in_centers[:, is_in_boxes_anchor]
         )
         return is_in_boxes_anchor, is_in_boxes_and_center
 
@@ -690,14 +688,14 @@ class YOLOXHead(nn.Module):
 
 class YOLOXHeadN(nn.Module):
     def __init__(
-        self,
-        num_classes,
-        width=1.0,
-        strides=[8, 16, 32],
-        in_channels=[256, 512, 1024],
-        act="silu",
-        depthwise=False,
-        iou_type="iou"
+            self,
+            num_classes,
+            width=1.0,
+            strides=[8, 16, 32],
+            in_channels=[256, 512, 1024],
+            act="silu",
+            depthwise=False,
+            iou_type="iou"
     ):
         """
         Args:
@@ -822,7 +820,7 @@ class YOLOXHeadN(nn.Module):
         expanded_strides = []
 
         for k, (cls_conv, reg_conv, stride_this_level, x) in enumerate(
-            zip(self.cls_convs, self.reg_convs, self.strides, xin)
+                zip(self.cls_convs, self.reg_convs, self.strides, xin)
         ):
             x = self.stems[k](x)
             cls_x = x
@@ -845,8 +843,8 @@ class YOLOXHeadN(nn.Module):
                 y_shifts.append(grid[:, :, 1])
                 expanded_strides.append(
                     torch.zeros(1, grid.shape[1])
-                    .fill_(stride_this_level)
-                    .type_as(xin[0])
+                        .fill_(stride_this_level)
+                        .type_as(xin[0])
                 )
                 if self.use_l1:
                     batch_size = reg_output.shape[0]
@@ -926,15 +924,15 @@ class YOLOXHeadN(nn.Module):
         return outputs
 
     def get_losses(
-        self,
-        imgs,
-        x_shifts,
-        y_shifts,
-        expanded_strides,
-        labels,
-        outputs,
-        origin_preds,
-        dtype,
+            self,
+            imgs,
+            x_shifts,
+            y_shifts,
+            expanded_strides,
+            labels,
+            outputs,
+            origin_preds,
+            dtype,
     ):
         bbox_preds = outputs[:, :, :4]  # [batch, n_anchors_all, 4]
         obj_preds = outputs[:, :, 4].unsqueeze(-1)  # [batch, n_anchors_all, 1]
@@ -1060,20 +1058,20 @@ class YOLOXHeadN(nn.Module):
 
         num_fg = max(num_fg, 1)
         loss_iou = (
-            self.iou_loss(bbox_preds.view(-1, 4)[fg_masks], reg_targets)
-        ).sum() / num_fg
+                       self.iou_loss(bbox_preds.view(-1, 4)[fg_masks], reg_targets)
+                   ).sum() / num_fg
         loss_obj = (
-            self.bcewithlog_loss(obj_preds.view(-1, 1), obj_targets)
-        ).sum() / num_fg
+                       self.bcewithlog_loss(obj_preds.view(-1, 1), obj_targets)
+                   ).sum() / num_fg
         loss_cls = (
-            self.bcewithlog_loss(
-                cls_preds.view(-1, self.num_classes)[fg_masks], cls_targets
-            )
-        ).sum() / num_fg
+                       self.bcewithlog_loss(
+                           cls_preds.view(-1, self.num_classes)[fg_masks], cls_targets
+                       )
+                   ).sum() / num_fg
         if self.use_l1:
             loss_l1 = (
-                self.l1_loss(origin_preds.view(-1, 4)[fg_masks], l1_targets)
-            ).sum() / num_fg
+                          self.l1_loss(origin_preds.view(-1, 4)[fg_masks], l1_targets)
+                      ).sum() / num_fg
         else:
             loss_l1 = 0.0
 
@@ -1098,22 +1096,22 @@ class YOLOXHeadN(nn.Module):
 
     @torch.no_grad()
     def get_assignments(
-        self,
-        batch_idx,
-        num_gt,
-        total_num_anchors,
-        gt_bboxes_per_image,
-        gt_classes,
-        bboxes_preds_per_image,
-        expanded_strides,
-        x_shifts,
-        y_shifts,
-        cls_preds,
-        bbox_preds,
-        obj_preds,
-        labels,
-        imgs,
-        mode="gpu",
+            self,
+            batch_idx,
+            num_gt,
+            total_num_anchors,
+            gt_bboxes_per_image,
+            gt_classes,
+            bboxes_preds_per_image,
+            expanded_strides,
+            x_shifts,
+            y_shifts,
+            cls_preds,
+            bbox_preds,
+            obj_preds,
+            labels,
+            imgs,
+            mode="gpu",
     ):
 
         if mode == "cpu":
@@ -1147,9 +1145,9 @@ class YOLOXHeadN(nn.Module):
 
         gt_cls_per_image = (
             F.one_hot(gt_classes.to(torch.int64), self.num_classes)
-            .float()
-            .unsqueeze(1)
-            .repeat(1, num_in_boxes_anchor, 1)
+                .float()
+                .unsqueeze(1)
+                .repeat(1, num_in_boxes_anchor, 1)
         )
         pair_wise_ious_loss = -torch.log(pair_wise_ious + 1e-8)
 
@@ -1158,8 +1156,8 @@ class YOLOXHeadN(nn.Module):
 
         with torch.cuda.amp.autocast(enabled=False):
             cls_preds_ = (
-                cls_preds_.float().unsqueeze(0).repeat(num_gt, 1, 1).sigmoid_()
-                * obj_preds_.float().unsqueeze(0).repeat(num_gt, 1, 1).sigmoid_()
+                    cls_preds_.float().unsqueeze(0).repeat(num_gt, 1, 1).sigmoid_()
+                    * obj_preds_.float().unsqueeze(0).repeat(num_gt, 1, 1).sigmoid_()
             )
             pair_wise_cls_loss = F.binary_cross_entropy(
                 cls_preds_.sqrt_(), gt_cls_per_image, reduction="none"
@@ -1167,9 +1165,9 @@ class YOLOXHeadN(nn.Module):
         del cls_preds_
 
         cost = (
-            pair_wise_cls_loss
-            + 3.0 * pair_wise_ious_loss
-            + 100000.0 * (~is_in_boxes_and_center)
+                pair_wise_cls_loss
+                + 3.0 * pair_wise_ious_loss
+                + 100000.0 * (~is_in_boxes_and_center)
         )
 
         (
@@ -1195,47 +1193,47 @@ class YOLOXHeadN(nn.Module):
         )
 
     def get_in_boxes_info(
-        self,
-        gt_bboxes_per_image,
-        expanded_strides,
-        x_shifts,
-        y_shifts,
-        total_num_anchors,
-        num_gt,
+            self,
+            gt_bboxes_per_image,
+            expanded_strides,
+            x_shifts,
+            y_shifts,
+            total_num_anchors,
+            num_gt,
     ):
         expanded_strides_per_image = expanded_strides[0]
         x_shifts_per_image = x_shifts[0] * expanded_strides_per_image
         y_shifts_per_image = y_shifts[0] * expanded_strides_per_image
         x_centers_per_image = (
             (x_shifts_per_image + 0.5 * expanded_strides_per_image)
-            .unsqueeze(0)
-            .repeat(num_gt, 1)
+                .unsqueeze(0)
+                .repeat(num_gt, 1)
         )  # [n_anchor] -> [n_gt, n_anchor]
         y_centers_per_image = (
             (y_shifts_per_image + 0.5 * expanded_strides_per_image)
-            .unsqueeze(0)
-            .repeat(num_gt, 1)
+                .unsqueeze(0)
+                .repeat(num_gt, 1)
         )
 
         gt_bboxes_per_image_l = (
             (gt_bboxes_per_image[:, 0] - 0.5 * gt_bboxes_per_image[:, 2])
-            .unsqueeze(1)
-            .repeat(1, total_num_anchors)
+                .unsqueeze(1)
+                .repeat(1, total_num_anchors)
         )
         gt_bboxes_per_image_r = (
             (gt_bboxes_per_image[:, 0] + 0.5 * gt_bboxes_per_image[:, 2])
-            .unsqueeze(1)
-            .repeat(1, total_num_anchors)
+                .unsqueeze(1)
+                .repeat(1, total_num_anchors)
         )
         gt_bboxes_per_image_t = (
             (gt_bboxes_per_image[:, 1] - 0.5 * gt_bboxes_per_image[:, 3])
-            .unsqueeze(1)
-            .repeat(1, total_num_anchors)
+                .unsqueeze(1)
+                .repeat(1, total_num_anchors)
         )
         gt_bboxes_per_image_b = (
             (gt_bboxes_per_image[:, 1] + 0.5 * gt_bboxes_per_image[:, 3])
-            .unsqueeze(1)
-            .repeat(1, total_num_anchors)
+                .unsqueeze(1)
+                .repeat(1, total_num_anchors)
         )
 
         b_l = x_centers_per_image - gt_bboxes_per_image_l
@@ -1275,7 +1273,7 @@ class YOLOXHeadN(nn.Module):
         is_in_boxes_anchor = is_in_boxes_all | is_in_centers_all
 
         is_in_boxes_and_center = (
-            is_in_boxes[:, is_in_boxes_anchor] & is_in_centers[:, is_in_boxes_anchor]
+                is_in_boxes[:, is_in_boxes_anchor] & is_in_centers[:, is_in_boxes_anchor]
         )
         return is_in_boxes_anchor, is_in_boxes_and_center
 
@@ -1318,14 +1316,14 @@ class YOLOXHeadN(nn.Module):
 
 class CoupleHead(nn.Module):
     def __init__(
-        self,
-        num_classes,
-        width=1.0,
-        strides=[8, 16, 32],
-        in_channels=[256, 512, 1024],
-        act="silu",
-        depthwise=False,
-        iou_type="iou"
+            self,
+            num_classes,
+            width=1.0,
+            strides=[8, 16, 32],
+            in_channels=[256, 512, 1024],
+            act="silu",
+            depthwise=False,
+            iou_type="iou"
     ):
         """
         Args:
@@ -1410,7 +1408,7 @@ class CoupleHead(nn.Module):
         expanded_strides = []
 
         for k, (conv, stride_this_level, x) in enumerate(
-            zip(self.convs, self.strides, xin)
+                zip(self.convs, self.strides, xin)
         ):
             x = self.stems[k](x)
             conv_feat = conv(x)
@@ -1419,7 +1417,7 @@ class CoupleHead(nn.Module):
 
             reg_output = preds_feat[:, :4, :, :]
             obj_output = preds_feat[:, 4: 4 + self.n_anchors * 1, :, :]
-            cls_output = preds_feat[:, 4+self.n_anchors * 1:, :, :]
+            cls_output = preds_feat[:, 4 + self.n_anchors * 1:, :, :]
             # print(reg_output.shape, obj_output.shape, cls_output.shape)
             if self.training:
                 output = torch.cat([reg_output, obj_output, cls_output], 1)  # 【batch_size, channels(4+1+20), w, h】
@@ -1432,8 +1430,8 @@ class CoupleHead(nn.Module):
                 y_shifts.append(grid[:, :, 1])  # y相对于左上角的偏移量  【1， w*h， 1】
                 expanded_strides.append(
                     torch.zeros(1, grid.shape[1])
-                    .fill_(stride_this_level)
-                    .type_as(xin[0])
+                        .fill_(stride_this_level)
+                        .type_as(xin[0])
                 )  # grid.shape[1] 当前尺度表示全图有多少个格点（anchor*w*h）---多少个预测框
                 # 填充当前尺寸下的缩小倍数  【1， anchor*w*h】
                 if self.use_l1:
@@ -1453,7 +1451,6 @@ class CoupleHead(nn.Module):
                 )  # 【batch_size, channels（4+1(sigmoid)+num_classes(sigmoid））， w, h】  sigmoid【0，1】
 
             outputs.append(output)
-
 
         if self.training:
             return self.get_losses(
@@ -1486,11 +1483,11 @@ class CoupleHead(nn.Module):
         :return:  output调整到与原图相同尺寸大小的输出 并且维度为【batch_size, anchor(1)*w*h, num_channels(x、y、w、h、1、num_classes)】
                 grids-格点左上角坐标【batch_size, anchor*w*h, 2】
         """
-        grid = self.grids[k]    # torch.zeros(0)  表示当前格点左上角的坐标
+        grid = self.grids[k]  # torch.zeros(0)  表示当前格点左上角的坐标
 
         batch_size = output.shape[0]  # batch_size
         n_ch = 5 + self.num_classes
-        hsize, wsize = output.shape[-2:]   # 每个尺度下的特征图高宽
+        hsize, wsize = output.shape[-2:]  # 每个尺度下的特征图高宽
         if grid.shape[2:4] != output.shape[2:4]:
             yv, xv = torch.meshgrid([torch.arange(hsize), torch.arange(wsize)])
             """yv:                                       xv:
@@ -1534,15 +1531,15 @@ class CoupleHead(nn.Module):
         return outputs
 
     def get_losses(
-        self,
-        imgs,
-        x_shifts,
-        y_shifts,
-        expanded_strides,
-        labels,
-        outputs,
-        origin_preds,
-        dtype,
+            self,
+            imgs,
+            x_shifts,
+            y_shifts,
+            expanded_strides,
+            labels,
+            outputs,
+            origin_preds,
+            dtype,
     ):
         bbox_preds = outputs[:, :, :4]  # [batch, n_anchors_all, 4]  锚框预测
         obj_preds = outputs[:, :, 4].unsqueeze(-1)  # [batch, n_anchors_all, 1]  是否有物体
@@ -1596,13 +1593,13 @@ class CoupleHead(nn.Module):
                         batch_idx,  # 此张图片在batch中的id
                         num_gt,  # 此张图片上真实框的个数
                         total_num_anchors,  # 预测的总计多少个框（全部特征尺度）
-                        gt_bboxes_per_image,   # 此张图片的真实框标签
+                        gt_bboxes_per_image,  # 此张图片的真实框标签
                         gt_classes,  # 此张图片每个真实框对应的类别
                         bboxes_preds_per_image,  # 此张图片的预测框（x， y， w， h）
                         expanded_strides,  # 【1， anchor*w*h*3】~~*3表示三个尺度的
                         x_shifts,  # x相对于左上角的偏移量  多个尺度的
                         y_shifts,  # y相对于左上角的偏移量 多个尺度的
-                        cls_preds,   # [batch, n_anchors_all, n_cls] 类别预测
+                        cls_preds,  # [batch, n_anchors_all, n_cls] 类别预测
                         bbox_preds,  # [batch, n_anchors_all, 4]  锚框预测
                         obj_preds,  # [batch, n_anchors_all, 1]  是否有物体
                         labels,  # 【batch_size, num， 4（x，y， w， h）】
@@ -1672,20 +1669,20 @@ class CoupleHead(nn.Module):
 
         num_fg = max(num_fg, 1)
         loss_iou = (
-            self.iou_loss(bbox_preds.view(-1, 4)[fg_masks], reg_targets)
-        ).sum() / num_fg
+                       self.iou_loss(bbox_preds.view(-1, 4)[fg_masks], reg_targets)
+                   ).sum() / num_fg
         loss_obj = (
-            self.bcewithlog_loss(obj_preds.view(-1, 1), obj_targets)
-        ).sum() / num_fg
+                       self.bcewithlog_loss(obj_preds.view(-1, 1), obj_targets)
+                   ).sum() / num_fg
         loss_cls = (
-            self.bcewithlog_loss(
-                cls_preds.view(-1, self.num_classes)[fg_masks], cls_targets
-            )
-        ).sum() / num_fg
+                       self.bcewithlog_loss(
+                           cls_preds.view(-1, self.num_classes)[fg_masks], cls_targets
+                       )
+                   ).sum() / num_fg
         if self.use_l1:
             loss_l1 = (
-                self.l1_loss(origin_preds.view(-1, 4)[fg_masks], l1_targets)
-            ).sum() / num_fg
+                          self.l1_loss(origin_preds.view(-1, 4)[fg_masks], l1_targets)
+                      ).sum() / num_fg
         else:
             loss_l1 = 0.0
 
@@ -1710,22 +1707,22 @@ class CoupleHead(nn.Module):
 
     @torch.no_grad()
     def get_assignments(
-        self,
-        batch_idx,  # 此张图片在batch中的id
-        num_gt,  # 此张图片上真实框的个数
-        total_num_anchors,  # 预测的总计多少个框（全部特征尺度）
-        gt_bboxes_per_image,  # 此张图片的真实框标签
-        gt_classes,  # 此张图片每个真实框对应的类别
-        bboxes_preds_per_image,  # 此张图片的预测框（x， y， w， h）
-        expanded_strides,   # 【1， n_anchor_all】~三个尺度的
-        x_shifts,  # x相对于左上角的偏移量  多个尺度的
-        y_shifts,  # y相对于左上角的偏移量 多个尺度的
-        cls_preds,  # [batch, n_anchors_all, n_cls] 类别预测
-        bbox_preds,  # [batch, n_anchors_all, 4]  锚框预测
-        obj_preds,  # [batch, n_anchors_all, 1]  是否有物体
-        labels,  # 【batch_size, num， 4（x，y， w， h）】
-        imgs,
-        mode="gpu",
+            self,
+            batch_idx,  # 此张图片在batch中的id
+            num_gt,  # 此张图片上真实框的个数
+            total_num_anchors,  # 预测的总计多少个框（全部特征尺度）
+            gt_bboxes_per_image,  # 此张图片的真实框标签
+            gt_classes,  # 此张图片每个真实框对应的类别
+            bboxes_preds_per_image,  # 此张图片的预测框（x， y， w， h）
+            expanded_strides,  # 【1， n_anchor_all】~三个尺度的
+            x_shifts,  # x相对于左上角的偏移量  多个尺度的
+            y_shifts,  # y相对于左上角的偏移量 多个尺度的
+            cls_preds,  # [batch, n_anchors_all, n_cls] 类别预测
+            bbox_preds,  # [batch, n_anchors_all, 4]  锚框预测
+            obj_preds,  # [batch, n_anchors_all, 1]  是否有物体
+            labels,  # 【batch_size, num， 4（x，y， w， h）】
+            imgs,
+            mode="gpu",
     ):
 
         if mode == "cpu":
@@ -1759,9 +1756,9 @@ class CoupleHead(nn.Module):
 
         gt_cls_per_image = (
             F.one_hot(gt_classes.to(torch.int64), self.num_classes)
-            .float()
-            .unsqueeze(1)
-            .repeat(1, num_in_boxes_anchor, 1)
+                .float()
+                .unsqueeze(1)
+                .repeat(1, num_in_boxes_anchor, 1)
         )
         pair_wise_ious_loss = -torch.log(pair_wise_ious + 1e-8)
 
@@ -1770,8 +1767,8 @@ class CoupleHead(nn.Module):
 
         with torch.cuda.amp.autocast(enabled=False):
             cls_preds_ = (
-                cls_preds_.float().unsqueeze(0).repeat(num_gt, 1, 1).sigmoid_()
-                * obj_preds_.float().unsqueeze(0).repeat(num_gt, 1, 1).sigmoid_()
+                    cls_preds_.float().unsqueeze(0).repeat(num_gt, 1, 1).sigmoid_()
+                    * obj_preds_.float().unsqueeze(0).repeat(num_gt, 1, 1).sigmoid_()
             )
             pair_wise_cls_loss = F.binary_cross_entropy(
                 cls_preds_.sqrt_(), gt_cls_per_image, reduction="none"
@@ -1779,9 +1776,9 @@ class CoupleHead(nn.Module):
         del cls_preds_
 
         cost = (
-            pair_wise_cls_loss
-            + 3.0 * pair_wise_ious_loss
-            + 100000.0 * (~is_in_boxes_and_center)
+                pair_wise_cls_loss
+                + 3.0 * pair_wise_ious_loss
+                + 100000.0 * (~is_in_boxes_and_center)
         )
 
         (
@@ -1807,13 +1804,13 @@ class CoupleHead(nn.Module):
         )
 
     def get_in_boxes_info(
-        self,
-        gt_bboxes_per_image,  # 此张图片的真实框标签
-        expanded_strides,  # 【1， n_anchor_all】~三个尺度的
-        x_shifts,  # x相对于左上角的偏移量  多个尺度的--所有图片的都一样
-        y_shifts,  # y相对于左上角的偏移量  多个尺度的
-        total_num_anchors,  # 预测的总计多少个框（全部特征尺度）
-        num_gt,  # 此张图片上真实框的个数
+            self,
+            gt_bboxes_per_image,  # 此张图片的真实框标签
+            expanded_strides,  # 【1， n_anchor_all】~三个尺度的
+            x_shifts,  # x相对于左上角的偏移量  多个尺度的--所有图片的都一样
+            y_shifts,  # y相对于左上角的偏移量  多个尺度的
+            total_num_anchors,  # 预测的总计多少个框（全部特征尺度）
+            num_gt,  # 此张图片上真实框的个数
     ):
         """
 
@@ -1826,39 +1823,39 @@ class CoupleHead(nn.Module):
         :return:   哪些是中心点重合 哪些是中心点和框都
         """
         expanded_strides_per_image = expanded_strides[0]
-        x_shifts_per_image = x_shifts[0] * expanded_strides_per_image   # 在原始图片中每个格点-左上角-相对于-左上角x-的偏移量
-        y_shifts_per_image = y_shifts[0] * expanded_strides_per_image   # 在原始图片中每个格点-左上角-相对于-左上角y-的偏移量
+        x_shifts_per_image = x_shifts[0] * expanded_strides_per_image  # 在原始图片中每个格点-左上角-相对于-左上角x-的偏移量
+        y_shifts_per_image = y_shifts[0] * expanded_strides_per_image  # 在原始图片中每个格点-左上角-相对于-左上角y-的偏移量
         x_centers_per_image = (
             (x_shifts_per_image + 0.5 * expanded_strides_per_image)
-            .unsqueeze(0)
-            .repeat(num_gt, 1)
+                .unsqueeze(0)
+                .repeat(num_gt, 1)
         )  # 在原始图片中每个格点-中心点-相对于-左上角x-的偏移量
         # [n_anchor] -> [n_gt, n_anchor]
         y_centers_per_image = (
             (y_shifts_per_image + 0.5 * expanded_strides_per_image)
-            .unsqueeze(0)
-            .repeat(num_gt, 1)
+                .unsqueeze(0)
+                .repeat(num_gt, 1)
         )  # 在原始图片中每个格点-中心点-相对于-左上角y-的偏移量
 
         gt_bboxes_per_image_l = (
             (gt_bboxes_per_image[:, 0] - 0.5 * gt_bboxes_per_image[:, 2])
-            .unsqueeze(1)
-            .repeat(1, total_num_anchors)
+                .unsqueeze(1)
+                .repeat(1, total_num_anchors)
         )  # 每个-真实框-左上角的x， 并扩展成预测的大小尺度
         gt_bboxes_per_image_r = (
             (gt_bboxes_per_image[:, 0] + 0.5 * gt_bboxes_per_image[:, 2])
-            .unsqueeze(1)
-            .repeat(1, total_num_anchors)
+                .unsqueeze(1)
+                .repeat(1, total_num_anchors)
         )  # 每个-真实框-右下角的x
         gt_bboxes_per_image_t = (
             (gt_bboxes_per_image[:, 1] - 0.5 * gt_bboxes_per_image[:, 3])
-            .unsqueeze(1)
-            .repeat(1, total_num_anchors)
+                .unsqueeze(1)
+                .repeat(1, total_num_anchors)
         )  # 每个-真实框-左上角的y
         gt_bboxes_per_image_b = (
             (gt_bboxes_per_image[:, 1] + 0.5 * gt_bboxes_per_image[:, 3])
-            .unsqueeze(1)
-            .repeat(1, total_num_anchors)
+                .unsqueeze(1)
+                .repeat(1, total_num_anchors)
         )  # 每个-真实框-右下角的y
 
         b_l = x_centers_per_image - gt_bboxes_per_image_l
@@ -1867,7 +1864,7 @@ class CoupleHead(nn.Module):
         b_b = gt_bboxes_per_image_b - y_centers_per_image
         bbox_deltas = torch.stack([b_l, b_t, b_r, b_b], 2)
 
-        is_in_boxes = bbox_deltas.min(dim=-1).values > 0.0   # 表示真实框哪些坐标在格点内？
+        is_in_boxes = bbox_deltas.min(dim=-1).values > 0.0  # 表示真实框哪些坐标在格点内？
         is_in_boxes_all = is_in_boxes.sum(dim=0) > 0  # 表示真实框在哪些格点的内？
         # in fixed center
 
@@ -1898,7 +1895,7 @@ class CoupleHead(nn.Module):
         is_in_boxes_anchor = is_in_boxes_all | is_in_centers_all
 
         is_in_boxes_and_center = (
-            is_in_boxes[:, is_in_boxes_anchor] & is_in_centers[:, is_in_boxes_anchor]
+                is_in_boxes[:, is_in_boxes_anchor] & is_in_centers[:, is_in_boxes_anchor]
         )
         return is_in_boxes_anchor, is_in_boxes_and_center
 
@@ -1938,4 +1935,210 @@ class CoupleHead(nn.Module):
         ]
         return num_fg, gt_matched_classes, pred_ious_this_matching, matched_gt_inds
 
+
+class TAHead(YOLOXHead):
+    """
+    + focal loss, iou loss->ciou loss
+    """
+    def __init__(
+            self,
+            num_classes,
+            width=1.0,
+            strides=[8, 16, 32],
+            in_channels=[256, 512, 1024],
+            act="silu",
+            depthwise=False,
+            iou_type="ciou",
+            l1_type="l1loss"
+    ):
+        """
+        Args:
+            act (str): activation type of conv. Defalut value: "silu".
+            depthwise (bool): whether apply depthwise conv in conv branch. Defalut value: False.
+        """
+        super().__init__(
+            num_classes=num_classes, width=width, strides=strides, in_channels=in_channels, act=act,
+            depthwise=depthwise, iou_type=iou_type, l1_type=l1_type
+        )
+        self.bcewithlog_loss = nn.BCEWithLogitsLoss(reduction="none")
+        self.iou_loss = IOUloss(reduction="none", loss_type=iou_type)
+
+    def get_losses(
+            self,
+            imgs,
+            x_shifts,
+            y_shifts,
+            expanded_strides,
+            labels,
+            outputs,
+            origin_preds,
+            dtype,
+    ):
+        bbox_preds = outputs[:, :, :4]  # [batch, n_anchors_all, 4]  锚框预测
+        obj_preds = outputs[:, :, 4].unsqueeze(-1)  # [batch, n_anchors_all, 1]  是否有物体
+        cls_preds = outputs[:, :, 5:]  # [batch, n_anchors_all, n_cls]  类别预测
+
+        # calculate targets
+        nlabel = (labels.sum(dim=2) > 0).sum(dim=1)  # number of objects
+
+        total_num_anchors = outputs.shape[1]  # 预测的总计多少个框（全部特征尺度）
+        x_shifts = torch.cat(x_shifts, 1)  # [1, n_anchors_all]  x相对于左上角的偏移量 多个尺度的
+        y_shifts = torch.cat(y_shifts, 1)  # [1, n_anchors_all]  y相对于左上角的偏移量  多个尺度的
+        expanded_strides = torch.cat(expanded_strides, 1)  # 【1， anchor*w*h*3】~~*3表示三个尺度的
+        if self.use_l1:
+            origin_preds = torch.cat(origin_preds, 1)
+
+        cls_targets = []
+        reg_targets = []
+        l1_targets = []
+        obj_targets = []
+        fg_masks = []
+
+        num_fg = 0.0
+        num_gts = 0.0  # 此批量上全部真实框个数
+
+        for batch_idx in range(outputs.shape[0]):  # 分成每张图片计算
+            num_gt = int(nlabel[batch_idx])  # 此张图片上真实框的个数
+            num_gts += num_gt
+            if num_gt == 0:  # 这张图片上没有真实框
+                cls_target = outputs.new_zeros((0, self.num_classes))
+                reg_target = outputs.new_zeros((0, 4))
+                l1_target = outputs.new_zeros((0, 4))
+                obj_target = outputs.new_zeros((total_num_anchors, 1))
+                fg_mask = outputs.new_zeros(total_num_anchors).bool()
+            else:
+                gt_bboxes_per_image = labels[batch_idx, :num_gt, 1:5]  # 此张图片的真实框标签
+                gt_classes = labels[batch_idx, :num_gt, 0]  # 此张图片的对应的每个真实框类别
+                bboxes_preds_per_image = bbox_preds[batch_idx]  # 此张图片的预测框（x， y， w， h）
+                """
+                try:  正常操作
+                except：发生异常执行此处代码
+                # else：如没有异常执行此处代码
+                """
+                try:
+                    (
+                        gt_matched_classes,
+                        fg_mask,
+                        pred_ious_this_matching,
+                        matched_gt_inds,
+                        num_fg_img,
+                    ) = self.get_assignments(
+                        batch_idx,  # 此张图片在batch中的id
+                        num_gt,  # 此张图片上真实框的个数
+                        total_num_anchors,  # 预测的总计多少个框（全部特征尺度）
+                        gt_bboxes_per_image,  # 此张图片的真实框标签
+                        gt_classes,  # 此张图片每个真实框对应的类别
+                        bboxes_preds_per_image,  # 此张图片的预测框（x， y， w， h）
+                        expanded_strides,  # 【1， anchor*w*h*3】~~*3表示三个尺度的
+                        x_shifts,  # x相对于左上角的偏移量  多个尺度的
+                        y_shifts,  # y相对于左上角的偏移量 多个尺度的
+                        cls_preds,  # [batch, n_anchors_all, n_cls] 类别预测
+                        bbox_preds,  # [batch, n_anchors_all, 4]  锚框预测
+                        obj_preds,  # [batch, n_anchors_all, 1]  是否有物体
+                        labels,  # 【batch_size, num， 4（x，y， w， h）】
+                        imgs,  # batch_size的全部图片；
+                    )
+                except RuntimeError:
+                    logger.error(
+                        "ROM RuntimeError is raised due to the huge memory cost during label assignment. \
+                           CPU mode is applied in this batch. If you want to avoid this issue, \
+                           try to reduce the batch size or image size."
+                    )
+                    torch.cuda.empty_cache()  # 清除无用的临时变量
+                    (
+                        gt_matched_classes,
+                        fg_mask,
+                        pred_ious_this_matching,
+                        matched_gt_inds,
+                        num_fg_img,
+                    ) = self.get_assignments(  # noqa
+                        batch_idx,
+                        num_gt,
+                        total_num_anchors,
+                        gt_bboxes_per_image,
+                        gt_classes,
+                        bboxes_preds_per_image,
+                        expanded_strides,
+                        x_shifts,
+                        y_shifts,
+                        cls_preds,
+                        bbox_preds,
+                        obj_preds,
+                        labels,
+                        imgs,
+                        "cpu",
+                    )
+
+                torch.cuda.empty_cache()  # 清除无用的临时变量
+                num_fg += num_fg_img
+
+                cls_target = F.one_hot(
+                    gt_matched_classes.to(torch.int64), self.num_classes
+                ) * pred_ious_this_matching.unsqueeze(-1)
+                obj_target = fg_mask.unsqueeze(-1)
+                reg_target = gt_bboxes_per_image[matched_gt_inds]
+                if self.use_l1:
+                    l1_target = self.get_l1_target(
+                        outputs.new_zeros((num_fg_img, 4)),
+                        gt_bboxes_per_image[matched_gt_inds],
+                        expanded_strides[0][fg_mask],
+                        x_shifts=x_shifts[0][fg_mask],
+                        y_shifts=y_shifts[0][fg_mask],
+                    )
+
+            cls_targets.append(cls_target)
+            reg_targets.append(reg_target)
+            obj_targets.append(obj_target.to(dtype))
+            fg_masks.append(fg_mask)
+            if self.use_l1:
+                l1_targets.append(l1_target)
+
+        cls_targets = torch.cat(cls_targets, 0)
+        reg_targets = torch.cat(reg_targets, 0)
+        obj_targets = torch.cat(obj_targets, 0)
+        fg_masks = torch.cat(fg_masks, 0)
+        if self.use_l1:
+            l1_targets = torch.cat(l1_targets, 0)
+
+        num_fg = max(num_fg, 1)
+        loss_iou = (
+                       self.iou_loss(bbox_preds.view(-1, 4)[fg_masks], reg_targets)
+                   ).sum() / num_fg
+        # loss_obj = (
+        #                self.bcewithlog_loss(obj_preds.view(-1, 1), obj_targets)
+        #            ).sum() / num_fg
+        loss_obj = (
+                       self.focal_loss(obj_preds.sigmoid().view(-1, 1), obj_targets)
+                   ).sum() / num_fg
+        loss_cls = (
+                       self.bcewithlog_loss(
+                           cls_preds.view(-1, self.num_classes)[fg_masks], cls_targets
+                       )
+                   ).sum() / num_fg
+        if self.use_l1:
+            loss_l1 = (
+                          self.l1_loss(origin_preds.view(-1, 4)[fg_masks], l1_targets)
+                      ).sum() / num_fg
+        else:
+            loss_l1 = 0.0
+
+        reg_weight = 5.0
+        loss = reg_weight * loss_iou + loss_obj + loss_cls + loss_l1
+
+        return (
+            loss,
+            reg_weight * loss_iou,
+            loss_obj,
+            loss_cls,
+            loss_l1,
+            num_fg / max(num_gts, 1),
+        )
+
+    def focal_loss(self, pred, gt):
+        pos_inds = gt.eq(1).float()
+        neg_inds = gt.eq(0).float()
+        pos_loss = torch.log(pred + 1e-5) * torch.pow(1 - pred, 2) * pos_inds * 0.75
+        neg_loss = torch.log(1 - pred + 1e-5) * torch.pow(pred, 2) * neg_inds * 0.25
+        loss = -(pos_loss + neg_loss)
+        return loss
 

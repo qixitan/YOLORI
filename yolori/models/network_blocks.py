@@ -6,6 +6,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import math
+import numpy as np
 
 
 class SiLU(nn.Module):
@@ -97,6 +98,8 @@ class Bottleneck(nn.Module):
             y = y + x
         return y
 
+
+# Layer
 
 class CSPLayer(nn.Module):
     """C3 in yolov5, CSP Bottleneck with 3 convolutions"""
@@ -284,6 +287,151 @@ class Focus(nn.Module):
         return self.conv(x)
 
 
+class OSA(nn.Module):
+    """used in Cascade CSPDarknet"""
+
+    def __init__(
+            self,
+            in_channels,
+            out_channels,
+            n=1,
+            shortcut=True,
+            expansion=0.5,
+            depthwise=False,
+            act="silu",
+    ):
+        """
+        Args:
+            in_channels (int): input channels.
+            out_channels (int): output channels.
+            n (int): number of Bottlenecks. Default value: 1.
+        """
+        # ch_in, ch_out, number, shortcut, groups, expansion
+        super().__init__()
+        hidden_channels = int(out_channels * expansion)  # hidden channels
+        self.conv1 = BaseConv(in_channels, hidden_channels, 1, stride=1, act=act)
+        self.conv2 = BaseConv(in_channels, hidden_channels, 1, stride=1, act=act)
+        self.conv3 = BaseConv((n + 1) * hidden_channels, out_channels, 1, stride=1, act=act)
+        self.module_list = nn.ModuleList(
+            Bottleneck(
+                hidden_channels, hidden_channels, shortcut, 1.0, depthwise, act=act
+            )
+            for _ in range(n)
+        )
+
+        # self.m = nn.Sequential(*module_list)
+        self.n = n
+
+    def forward(self, x):
+        cat = []
+        x_1 = self.conv1(x)
+        cat.append(x_1)
+        x_2 = self.conv2(x)
+        # x_1 = self.m(x_1)
+        for i in range(self.n):
+            x_2 = self.module_list[i](x_2)
+            cat.append(x_2)
+        x = torch.cat(cat, dim=1)
+        return self.conv3(x)
+
+
+class OSA_identity(nn.Module):
+    """used in Cascade CSPDarknet"""
+
+    def __init__(
+            self,
+            in_channels,
+            out_channels,
+            n=1,
+            shortcut=True,
+            expansion=0.5,
+            depthwise=False,
+            act="silu",
+    ):
+        """
+        Args:
+            in_channels (int): input channels.
+            out_channels (int): output channels.
+            n (int): number of Bottlenecks. Default value: 1.
+        """
+        # ch_in, ch_out, number, shortcut, groups, expansion
+        super().__init__()
+        hidden_channels = int(out_channels * expansion)  # hidden channels
+        self.conv1 = BaseConv(in_channels, hidden_channels, 1, stride=1, act=act)
+        self.conv2 = BaseConv(in_channels, hidden_channels, 1, stride=1, act=act)
+        self.conv3 = BaseConv((n + 1) * hidden_channels, out_channels, 1, stride=1, act=act)
+        self.module_list = nn.ModuleList(
+            Bottleneck(
+                hidden_channels, hidden_channels, shortcut, 1.0, depthwise, act=act
+            )
+            for _ in range(n)
+        )
+
+        # self.m = nn.Sequential(*module_list)
+        self.n = n
+
+    def forward(self, x):
+        cat = []
+        x_1 = self.conv1(x)
+        cat.append(x_1)
+        x_2 = self.conv2(x)
+        # x_1 = self.m(x_1)
+        for i in range(self.n):
+            x_2 = self.module_list[i](x_2)
+            cat.append(x_2)
+        x = x + self.conv3(torch.cat(cat, dim=1))
+        return x
+
+
+class OSA_attention(nn.Module):
+    """used in Cascade CSPDarknet"""
+
+    def __init__(
+            self,
+            in_channels,
+            out_channels,
+            n=1,
+            shortcut=True,
+            expansion=0.5,
+            depthwise=False,
+            act="silu",
+    ):
+        """
+        Args:
+            in_channels (int): input channels.
+            out_channels (int): output channels.
+            n (int): number of Bottlenecks. Default value: 1.
+        """
+        # ch_in, ch_out, number, shortcut, groups, expansion
+        super().__init__()
+        hidden_channels = int(out_channels * expansion)  # hidden channels
+        self.conv1 = BaseConv(in_channels, hidden_channels, 1, stride=1, act=act)
+        self.conv2 = BaseConv(in_channels, hidden_channels, 1, stride=1, act=act)
+        self.conv3 = BaseConv((n + 1) * hidden_channels, out_channels, 1, stride=1, act=act)
+        self.module_list = nn.ModuleList(
+            Bottleneck(
+                hidden_channels, hidden_channels, shortcut, 1.0, depthwise, act=act
+            )
+            for _ in range(n)
+        )
+
+        # self.m = nn.Sequential(*module_list)
+        self.n = n
+
+        self.attention = CBAM(out_channels)
+
+    def forward(self, x):
+        cat = []
+        x_1 = self.conv1(x)
+        cat.append(x_1)
+        x_2 = self.conv2(x)
+        # x_1 = self.m(x_1)
+        for i in range(self.n):
+            x_2 = self.module_list[i](x_2)
+            cat.append(x_2)
+        x = x + self.attention(self.conv3(torch.cat(cat, dim=1)))
+        return x
+
 # Attention block
 class NonlocalAttention(nn.Module):
     """
@@ -370,7 +518,8 @@ class KSEBlock(nn.Module):
     def __init__(self, in_channels, k=8, act="relu"):
         super(KSEBlock, self).__init__()
         self.down = nn.Conv2d(in_channels, out_channels=in_channels, kernel_size=1, stride=1, bias=True)
-        self.k_mlp = nn.Conv2d(in_channels=in_channels, out_channels=in_channels, kernel_size=1, stride=1, bias=True, groups=k)
+        self.k_mlp = nn.Conv2d(in_channels=in_channels, out_channels=in_channels, kernel_size=1, stride=1, bias=True,
+                               groups=k)
         self.in_channels = in_channels
         self.act = get_activation(act)
 
@@ -430,6 +579,7 @@ class CBAM(nn.Module):
         return out
 
 
+# RepVGG
 def conv_bn(in_channels, out_channels, kernel_size, stride, padding, groups=1):
     result = nn.Sequential()
     result.add_module('conv', nn.Conv2d(in_channels=in_channels, out_channels=out_channels,

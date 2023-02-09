@@ -29,7 +29,7 @@ class Exp(MyExp):
             in_channels = [256, 512, 1024]
             backbone = CSPDarknet(self.depth, self.width)
             neck = PAFPN(self.depth, self.width)
-            head = TOODHead(self.num_classes, self.width, in_channels=in_channels, act=self.act, stacked_convs=3)
+            head = TOODHead(self.num_classes, self.width, in_channels=in_channels, act=self.act, stacked_convs=3, iou_type="iou")
             self.model = Builder(backbone, neck, head)
 
         self.model.apply(init_yolo)

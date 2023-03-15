@@ -13,6 +13,7 @@ class Exp(MyExp):
         self.depth = 1.0
         self.width = 1.0
         self.exp_name = os.path.split(os.path.realpath(__file__))[1].split(".")[0]
+        self.random_size = (14, 26)
 
     def get_model(self, sublinear=False):
 
@@ -27,9 +28,8 @@ class Exp(MyExp):
             from yolori.models.head import YOLOXHead, TAHead
             from yolori.models import Builder
             in_channels = [256, 512, 1024]
-            out_features = ("stage3", "stage4", "stage5")
-            backbone = Cascade_CSPDarknet(dep_mul=self.depth, wid_mul=self.width)
-            neck = PAFPN(self.depth, self.width, in_features=out_features)
+            backbone = Cascade_CSPDarknet(dep_mul=self.depth, wid_mul=self.width, layertype="attention")
+            neck = PAFPN(self.depth, self.width)
             head = TAHead(self.num_classes, self.width, in_channels=in_channels, act=self.act, iou_type="ciou")
             self.model = Builder(backbone, neck, head)
 

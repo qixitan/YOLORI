@@ -140,7 +140,7 @@ class FocalLoss(nn.Module):
                                 instead summed for each minibatch.
     """
 
-    def __init__(self, class_num, alpha=None, gamma=2, size_average=False):
+    def __init__(self, class_num, alpha=None, gamma=2, reduction="none"):
         super(FocalLoss, self).__init__()
         if alpha is None:
             self.alpha = Variable(torch.ones(class_num, 1))
@@ -151,7 +151,7 @@ class FocalLoss(nn.Module):
                 self.alpha = Variable(alpha)
         self.gamma = gamma
         self.class_num = class_num
-        self.size_average = size_average
+        self.reduction = reduction
 
     def forward(self, inputs, targets):
         N = inputs.size(0)
@@ -173,9 +173,14 @@ class FocalLoss(nn.Module):
 
         batch_loss = -alpha * (torch.pow((1 - probs), self.gamma)) * log_p
 
-        if self.size_average:
+        loss = batch_loss
+        # if self.size_average:
+        if self.reduction == "none":
+            loss = batch_loss
+        if self.reduction == "mean":
             loss = batch_loss.mean()
-        else:
+        # else:
+        elif self.reduction == "sum":
             loss = batch_loss.sum()
         return loss
 
@@ -413,3 +418,103 @@ class alpha_IOUloss(nn.Module):
             loss = loss.sum()
 
         return loss
+
+# 不可用
+class Focal_Loss(nn.Module):
+    def __init__(self, weight, gamma=2, reduction="none"):
+        super(Focal_Loss, self).__init__()
+        self.gamma = gamma
+        self.weight = weight  # 是tensor数据格式的列表
+        self.reduction = reduction
+
+    def forward(self, preds, labels):
+        """
+        preds:logist输出值
+        labels:标签
+        """
+        preds = F.softmax(preds, dim=1)
+        eps = 1e-7
+
+        target = self.one_hot(preds.size(1), labels)
+
+        ce = -1 * torch.log(preds + eps) * target
+        floss = torch.pow((1 - preds), self.gamma) * ce
+        floss = torch.mul(floss, self.weight)
+
+        # if self.size_average:
+        if self.reduction == "none":
+            loss = floss
+        elif self.reduction == "mean":
+            loss = floss.mean()
+        # else:
+        elif self.reduction == "sum":
+            loss = floss.sum()
+        return loss
+
+    def one_hot(self, num, labels):
+        one = torch.zeros((labels.size(0), num))
+        one[range(labels.size(0)), labels] = 1
+        return one
+
+# 不可用
+class MultiCEFocalLoss(torch.nn.Module):
+    def __init__(self, class_num, gamma=2, alpha=None, reduction='none'):
+        super(MultiCEFocalLoss, self).__init__()
+        if alpha is None:
+            self.alpha = Variable(torch.ones(class_num, 1))
+        else:
+            self.alpha = alpha
+        self.gamma = gamma
+        self.reduction = reduction
+        self.class_num = class_num
+
+    def forward(self, predict, target):
+        pt = F.softmax(predict, dim=1)  # softmmax获取预测概率
+        # class_mask = F.one_hot(target, self.class_num)  # 获取target的one hot编码
+        ids = target.view(-1, 1)
+
+        onehot = torch.zeros_like(predict)
+        onehot.scatter_(1, ids.data, 1.)
+        class_mask = onehot  # 获取target的one hot编码自己实现
+
+        alpha = self.alpha[ids.data.view(-1)]  # 注意，这里的alpha是给定的一个list(tensor),里面的元素分别是每一个类的权重因子
+        probs = (pt * class_mask).sum(1).view(-1, 1)  # 利用onehot作为mask，提取对应的pt
+        log_p = probs.log()
+        # 同样，原始ce上增加一个动态权重衰减因子
+        loss = -alpha * (torch.pow((1 - probs), self.gamma)) * log_p
+        if self.reduction == "none":
+            loss = loss
+        if self.reduction == 'mean':
+            loss = loss.mean()
+        elif self.reduction == 'sum':
+            loss = loss.sum()
+        return loss
+
+# 不可用
+class MultiClassFocalLossWithAlpha(nn.Module):
+    def __init__(self, alpha, gamma=2, reduction='none'):
+        """
+        :param alpha: 权重系数列表，三分类中第0类权重0.2，第1类权重0.3，第2类权重0.5
+        :param gamma: 困难样本挖掘的gamma
+        :param reduction:
+        """
+        super(MultiClassFocalLossWithAlpha, self).__init__()
+        self.alpha = torch.tensor(alpha)
+        self.gamma = gamma
+        self.reduction = reduction
+
+    def forward(self, pred, target):
+        alpha = self.alpha[target]  # 为当前batch内的样本，逐个分配类别权重，shape=(bs), 一维向量
+        log_softmax = torch.log_softmax(pred, dim=1) # 对模型裸输出做softmax再取log, shape=(bs, 3)
+        logpt = torch.gather(log_softmax, dim=1, index=target.view(-1, 1))  # 取出每个样本在类别标签位置的log_softmax值, shape=(bs, 1)
+        logpt = logpt.view(-1)  # 降维，shape=(bs)
+        ce_loss = -logpt  # 对log_softmax再取负，就是交叉熵了
+        pt = torch.exp(logpt)  #对log_softmax取exp，把log消了，就是每个样本在类别标签位置的softmax值了，shape=(bs)
+        focal_loss = alpha * (1 - pt) ** self.gamma * ce_loss  # 根据公式计算focal loss，得到每个样本的loss值，shape=(bs)
+        if self.reduction == "none":
+            return focal_loss
+        if self.reduction == "mean":
+            return torch.mean(focal_loss)
+        if self.reduction == "sum":
+            return torch.sum(focal_loss)
+        return focal_loss

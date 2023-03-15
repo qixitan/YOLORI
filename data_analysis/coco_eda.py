@@ -6,10 +6,7 @@ import os
 import seaborn as sns
 import pycocotools.coco
 import matplotlib.pyplot as plt
-
-root_dir = os.getcwd()
-train_ann_fp = os.path.join(root_dir, 'annotations', 'instances_train2017.json')
-val_ann_fp = os.path.join(root_dir, 'annotations', 'instances_val2017.json')
+# import argparse
 
 
 class COCO_EDA:
@@ -144,7 +141,7 @@ def plot_size_distribution(plot_data, save_fp, plot_title, plot_order=['s', 'm',
     plt.subplots_adjust(left=0.1, bottom=0.1, right=0.9, top=0.9, wspace=1, hspace=1.5)  # 调整子图间距
 
     for idx, size_data in enumerate(plot_data.values()):
-        plt.subplot(10, 8, idx + 1)
+        plt.subplot(5, 4, idx + 1)
         plt.xticks(rotation=0, fontsize=18)  # x轴标签竖着显示
         plt.yticks(fontsize=18)
         plt.xlabel('size', fontsize=20)  # x轴名称
@@ -156,75 +153,81 @@ def plot_size_distribution(plot_data, save_fp, plot_title, plot_order=['s', 'm',
     plt.show()
 
 
-def run_plot_coco_class_distribution(coco, save_dir):
+def run_plot_coco_class_distribution(coco, save_dir, m):
     # # 绘制coco数据集的类别分布
     plot_order = [i for i in coco.catid2name.values()]
 
     plot_heigh = [i for i in coco.cat2objs_num.values()]
-    save_fp = os.path.join(save_dir, f'coco_{coco.type}_class_distribution.png')
-    plot_coco_class_distribution(coco.cats_plot, plot_order, save_fp, 'COCO train2017 class distribution', plot_heigh,
+    save_fp = os.path.join(save_dir, f'{m}_{coco.type}_class_distribution.png')
+    plot_coco_class_distribution(coco.cats_plot, plot_order, save_fp, f'{m} {coco.type} class distribution', plot_heigh,
                                  plot_y_heigh_residual=[1800, 100])
 
     plot_heigh = [i for i in coco.small_cat2objs_num.values()]
-    save_fp = os.path.join(save_dir, f'coco_{coco.type}_small_class_distribution.png')
-    plot_coco_class_distribution(coco.small_cats_plot, plot_order, save_fp, 'COCO train2017 small class distribution',
+    save_fp = os.path.join(save_dir, f'{m}_{coco.type}_small_class_distribution.png')
+    plot_coco_class_distribution(coco.small_cats_plot, plot_order, save_fp, f'{m} {coco.type} small class distribution',
                                  plot_heigh,
                                  plot_y_heigh_residual=[900, 50])
 
     plot_heigh = [i for i in coco.medium_cat2objs_num.values()]
-    save_fp = os.path.join(save_dir, f'coco_{coco.type}_medium_class_distribution.png')
-    plot_coco_class_distribution(coco.medium_cats_plot, plot_order, save_fp, 'COCO train2017 medium class distribution',
+    save_fp = os.path.join(save_dir, f'{m}_{coco.type}_medium_class_distribution.png')
+    plot_coco_class_distribution(coco.medium_cats_plot, plot_order, save_fp, f'{m} {coco.type} medium class distribution',
                                  plot_heigh, plot_y_heigh_residual=[900, 50])
 
     plot_heigh = [i for i in coco.large_cat2objs_num.values()]
-    save_fp = os.path.join(save_dir, f'coco_{coco.type}_large_class_distribution.png')
-    plot_coco_class_distribution(coco.large_cats_plot, plot_order, save_fp, 'COCO train2017 large class distribution',
+    save_fp = os.path.join(save_dir, f'{m}_{coco.type}_large_class_distribution.png')
+    plot_coco_class_distribution(coco.large_cats_plot, plot_order, save_fp, f'{m} {coco.type} large class distribution',
                                  plot_heigh,
                                  plot_y_heigh_residual=[900, 50])
 
 
-def run_plot_coco_size_distribution(coco, save_dir):
+def run_plot_coco_size_distribution(coco, save_dir, m):
     # 绘制coco数据集各类别的尺寸分布
     plot_order = [i for i in coco.catid2name.values()]
-    save_fp = os.path.join(save_dir, f'coco_{coco.type}_size_distribution.png')
+    save_fp = os.path.join(save_dir, '{}_{}_size_distribution.png'.format(m, coco.type))
     plot_size_distribution(coco.size_distribution, save_fp, plot_order)
 
 
 if __name__ == '__main__':
+    root_dir = r"/Home/guest/Datasets/DIORdevkit/DIOR2018"
+    train_ann_fp = os.path.join(root_dir, 'coco_ann', 'DIOR2018_trainval.json')
+    val_ann_fp = os.path.join(root_dir, 'coco_ann', 'DIOR2018_test.json')
+
     cwd = os.getcwd()
-    coco_res_dir = os.path.join(cwd, "coco2017_results")
+    m = root_dir.split("/")[-1]
+    coco_res_dir = os.path.join(cwd, m)
     if not os.path.exists(coco_res_dir):
         os.makedirs(coco_res_dir)
 
-    print("analyze coco train dataset...")
+    print("analyze {} train dataset...".format(m))
     print("-" * 50)
     coco_train = COCO_EDA(train_ann_fp, type='train')
     collect_data(coco_train)
-    print("coco train images num:", coco_train.imgs_num)
-    print("coco train objects num:", coco_train.objs_num)
-    print("coco small objects num:", coco_train.small_objs_num)
-    print("coco medium objects num:", coco_train.medium_objss_num)
-    print("coco large objects num:", coco_train.large_objss_num)
-    print("coco small objects percent:", coco_train.small_objs_num / coco_train.objs_num)
-    print("coco medium objects percent:", coco_train.medium_objss_num / coco_train.objs_num)
-    print("coco large objects percent:", coco_train.large_objss_num / coco_train.objs_num)
-    run_plot_coco_class_distribution(coco_train, coco_res_dir)
-    run_plot_coco_size_distribution(coco_train, coco_res_dir)
+    print("{} train images num: {}".format(m, coco_train.imgs_num))
+    print("{} train objects num: {}".format(m, coco_train.objs_num))
+    print("{} train small objects num: {}".format(m, coco_train.small_objs_num))
+    print("{} train medium objects num: {}".format(m, coco_train.medium_objss_num))
+    print("{} train large objects num: {}".format(m, coco_train.large_objss_num))
+    print("{} train  small objects percent: {}".format(m, coco_train.small_objs_num / coco_train.objs_num))
+    print("{} train medium objects percent: {}".format(m, coco_train.medium_objss_num / coco_train.objs_num))
+    print("{} train large objects percent: {}".format(m, coco_train.large_objss_num / coco_train.objs_num))
+    run_plot_coco_class_distribution(coco_train, coco_res_dir, m)
+    run_plot_coco_size_distribution(coco_train, coco_res_dir, m)
     print("-" * 50)
     print()
 
-    print("analyze coco val dataset...")
+    print("analyze {} val dataset...".format(m))
     print("-" * 50)
     coco_val = COCO_EDA(val_ann_fp, type='val')
     collect_data(coco_val)
-    print("coco val images num:", coco_val.imgs_num)
-    print("coco val objects num:", coco_val.objs_num)
-    print("coco small objects num:", coco_val.small_objs_num)
-    print("coco medium objects num:", coco_val.medium_objss_num)
-    print("coco large objects num:", coco_val.large_objss_num)
-    print("coco small objects percent:", coco_val.small_objs_num / coco_val.objs_num)
-    print("coco medium objects percent:", coco_val.medium_objss_num / coco_val.objs_num)
-    print("coco large objects percent:", coco_val.large_objss_num / coco_val.objs_num)
-    run_plot_coco_class_distribution(coco_val, coco_res_dir)
-    run_plot_coco_size_distribution(coco_val, coco_res_dir)
+    print("{} val images num: {}".format(m, coco_val.imgs_num))
+    print("{} val objects num: {}".format(m, coco_val.objs_num))
+    print("{} val small objects num: {}".format(m, coco_val.small_objs_num))
+    print("{} val medium objects num: {}".format(m, coco_val.medium_objss_num))
+    print("{} val large objects num: {}".format(m, coco_val.large_objss_num))
+    print("{} val small objects percent: {}".format(m, coco_val.small_objs_num / coco_val.objs_num))
+    print("{} val medium objects percent: {}".format(m, coco_val.medium_objss_num / coco_val.objs_num))
+    print("{} val large objects percent: {}".format(m, coco_val.large_objss_num / coco_val.objs_num))
+    run_plot_coco_class_distribution(coco_val, coco_res_dir, m)
+    run_plot_coco_size_distribution(coco_val, coco_res_dir, m)
+
     print("-" * 50)

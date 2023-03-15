@@ -4,7 +4,7 @@
 
 import os
 from torch import nn
-from yolori.exp import Dior_Exp as MyExp
+from yolori.exp import Dior_Exp_voc as MyExp
 """
 + focal loss, iou loss -> ciou loss
 """

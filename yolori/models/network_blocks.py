@@ -241,7 +241,7 @@ class SPPBottleneck(nn.Module):
 
 class SPPCSP(nn.Module):
     # CSP SPP https://github.com/WongKinYiu/CrossStagePartialNetworks
-    def __init__(self, in_channels, out_channels, kernel_sizes=(5, 9, 13), act="silu"):
+    def __init__(self, in_channels, out_channels, kernel_sizes=(5, 9, 13), activation="silu"):
         super(SPPCSP, self).__init__()
         hidden_channels = in_channels // 2  # hidden channels
         self.cv1 = BaseConv(in_channels, hidden_channels, 1, 1)
@@ -252,15 +252,40 @@ class SPPCSP(nn.Module):
         self.cv5 = BaseConv(4 * hidden_channels, hidden_channels, 1, 1)
         self.cv6 = BaseConv(hidden_channels, hidden_channels, 3, 1)
         self.bn = nn.BatchNorm2d(2 * hidden_channels)
-        self.act = get_activation(act)
+        self.act = get_activation(activation)
         self.cv7 = BaseConv(2 * hidden_channels, out_channels, 1, 1)
 
     def forward(self, x):
         x1 = self.cv4(self.cv3(self.cv1(x)))
         y1 = self.cv6(self.cv5(torch.cat([x1] + [m(x1) for m in self.m], 1)))
         y2 = self.cv2(x)
-        return self.cv7(self.act(self.bn(torch.cat((y1, y2), dim=1))))
+        return self.cv7((torch.cat((y1, y2), dim=1)))
 
+
+class SPPFCSP(nn.Module):
+    # CSP SPP https://blog.csdn.net/weixin_43694096/article/details/126354660
+    def __init__(self, in_channels, out_channels, kernel_sizes=(5, 9, 13), activation="silu"):
+        super(SPPFCSP, self).__init__()
+        hidden_channels = in_channels // 2  # hidden channels
+        self.cv1 = BaseConv(in_channels, hidden_channels, 1, 1)
+        self.cv2 = nn.Conv2d(in_channels, hidden_channels, 1, 1, bias=False)
+        self.cv3 = BaseConv(hidden_channels, hidden_channels, 3, 1)
+        self.cv4 = BaseConv(hidden_channels, hidden_channels, 1, 1)
+        # self.m = nn.ModuleList([nn.MaxPool2d(kernel_size=x, stride=1, padding=x // 2) for x in kernel_sizes])
+        self.m = nn.MaxPool2d(kernel_size=kernel_sizes[0], stride=1, padding=kernel_sizes[0] // 2)
+        self.cv5 = BaseConv(4 * hidden_channels, hidden_channels, 1, 1)
+        self.cv6 = BaseConv(hidden_channels, hidden_channels, 3, 1)
+        self.bn = nn.BatchNorm2d(2 * hidden_channels)
+        self.act = get_activation(activation)
+        self.cv7 = BaseConv(2 * hidden_channels, out_channels, 1, 1)
+
+    def forward(self, x):
+        x1 = self.cv4(self.cv3(self.cv1(x)))
+        x2 = self.m(x1)
+        x3 = self.m(x2)
+        y1 = self.cv6(self.cv5(torch.cat([x1, x2, x3, self.m(x3)], 1)))
+        y2 = self.cv2(x)
+        return self.cv7(torch.cat((y1, y2), dim=1))
 
 class Focus(nn.Module):
     """Focus width and height information into channel space."""
@@ -417,8 +442,7 @@ class OSA_attention(nn.Module):
 
         # self.m = nn.Sequential(*module_list)
         self.n = n
-
-        self.attention = CBAM(out_channels)
+        self.attention = CBAM(out_channels, reduction=16)
 
     def forward(self, x):
         cat = []
@@ -568,9 +592,9 @@ class SpatialAttentionModule(nn.Module):
 
 
 class CBAM(nn.Module):
-    def __init__(self, in_channels):
+    def __init__(self, in_channels, reduction=16):
         super(CBAM, self).__init__()
-        self.channel_attention = ChannelAttentionModule(in_channels)
+        self.channel_attention = ChannelAttentionModule(in_channels, reduction=reduction)
         self.spatial_attention = SpatialAttentionModule()
 
     def forward(self, x):

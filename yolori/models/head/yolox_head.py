@@ -11,7 +11,7 @@ import torch.nn.functional as F
 
 from yolori.utils import bboxes_iou
 
-from yolori.models.losses import IOUloss
+from yolori.models.losses import IOUloss, FocalLoss
 from yolori.models.network_blocks import BaseConv, DWConv
 
 __all__ = ["YOLOXHead", "YOLOXHeadN", "CoupleHead", "TAHead"]

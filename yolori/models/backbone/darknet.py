@@ -5,7 +5,7 @@
 from torch import nn
 
 from yolori.models.network_blocks import (
-    BaseConv, CSPLayer, DWConv, Focus, ResLayer, SPPBottleneck, OSA, OSA_identity, OSA_attention)
+    BaseConv, CSPLayer, DWConv, Focus, ResLayer, SPPBottleneck, OSA, OSA_identity, OSA_attention, SPPCSP, SPPFCSP)
 
 
 class Darknet(nn.Module):
@@ -167,7 +167,8 @@ class Cascade_CSPDarknet(nn.Module):
             out_features=("dark3", "dark4", "dark5"),
             depthwise=False,
             act="silu",
-            layertype="base"
+            layertype="base",
+            spptype="base"
     ):
         super().__init__()
         assert out_features, "please provide output features of Darknet"
@@ -182,7 +183,11 @@ class Cascade_CSPDarknet(nn.Module):
             layer = OSA_identity
         elif layertype == "attention":
             layer = OSA_attention
-
+        spplayer = SPPBottleneck
+        if spptype == "csp":
+            spplayer = SPPCSP
+        elif spptype == "fcsp":
+            spplayer = SPPFCSP
         # stem
         self.stem = Focus(3, base_channels, kernel_size=3, act=act)
         # dark2
@@ -208,7 +213,7 @@ class Cascade_CSPDarknet(nn.Module):
         # dark5
         self.dark5 = nn.Sequential(
             Conv(base_channels * 8, base_channels * 16, 3, 2, act=act),
-            SPPBottleneck(base_channels * 16, base_channels * 16, activation=act),
+            spplayer(base_channels * 16, base_channels * 16, activation=act),
             layer(
                 base_channels * 16, base_channels * 16, n=base_depth, shortcut=False, depthwise=depthwise, act=act, ),
         )

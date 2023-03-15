@@ -73,8 +73,15 @@ def main(exp, args, num_gpu):
 
     rank = get_local_rank()
     exp.val_ann = "DIOR2018_test.json"
-    file_name = os.path.join(exp.output_dir, args.experiment_name,
-                             max(os.listdir(os.path.join(exp.output_dir, args.experiment_name))))
+    if args.ckpt is None and args.exp_file is None:
+        file_name = os.path.join(exp.output_dir, args.experiment_name,
+                                max(os.listdir(os.path.join(exp.output_dir, args.experiment_name))))
+    elif args.exp_file is not None:
+        # file_name = os.path.join(**args.exp_file.split("/")[:-1])
+        file_name = args.exp_file
+    elif args.ckpt is not None:
+        # file_name = args.ckpt
+        os.path.join(**args.ckpt.split("/")[:-1])
 
     if rank == 0:
         os.makedirs(file_name, exist_ok=True)
@@ -149,7 +156,7 @@ def main(exp, args, num_gpu):
 
 if __name__ == "__main__":
     args = make_parser().parse_args()
-    exp = get_exp(args.exp_file, args.name)
+    exp = get_exp(None, args.name)
     exp.merge(args.opts)
 
     if not args.experiment_name:

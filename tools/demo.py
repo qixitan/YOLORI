@@ -22,13 +22,13 @@ IMAGE_EXT = [".jpg", ".jpeg", ".webp", ".bmp", ".png"]
 def make_parser():
     parser = argparse.ArgumentParser("YOLOX Demo!")
     parser.add_argument(
-        "demo", default="image", help="demo type, eg. image, video and webcam"
+        "--demo", default="image", help="demo type, eg. image, video and webcam"
     )
     parser.add_argument("-expn", "--experiment-name", type=str, default=None)
-    parser.add_argument("-n", "--name", type=str, default="yolox_dior_l_NonLocal_obj", help="model name")
+    parser.add_argument("-n", "--name", type=str, help="model name")
 
     parser.add_argument(
-        "--path", default="../assets/00293.jpg", help="path to images or video"
+        "--path", help="path to images or video"
     )
     parser.add_argument("--camid", type=int, default=0, help="webcam demo camera id")
     parser.add_argument(
@@ -45,7 +45,7 @@ def make_parser():
         type=str,
         help="pls input your experiment description file",
     )
-    parser.add_argument("-c", "--ckpt", default="tools/YOLOX_outputs/yolox_dior_l_NonLocal_obj/best_ckpt.pth", type=str, help="ckpt for eval")
+    parser.add_argument("-c", "--ckpt", type=str, help="ckpt for eval")
     parser.add_argument(
         "--device",
         default="cpu",
@@ -199,7 +199,7 @@ def image_demo(predictor, vis_folder, path, current_time, save_result):
             # )
             save_folder = vis_folder
             os.makedirs(save_folder, exist_ok=True)
-            save_file_name = os.path.join(save_folder, os.path.basename(image_name))
+            save_file_name = os.path.join(save_folder, os.path.basename(image_name).replace(".", "_demo."))
             logger.info("Saving detection result in {}".format(save_file_name))
             cv2.imwrite(save_file_name, result_image)
         ch = cv2.waitKey(0)
@@ -242,7 +242,7 @@ def main(exp, args):
     if not args.experiment_name:
         args.experiment_name = exp.exp_name
 
-    file_name = file_name = os.path.join(exp.output_dir, args.experiment_name,
+    file_name = os.path.join(exp.output_dir, args.experiment_name,
                              max(os.listdir(os.path.join(exp.output_dir, args.experiment_name))))
     os.makedirs(file_name, exist_ok=True)
 
@@ -306,7 +306,11 @@ def main(exp, args):
     )
     current_time = time.localtime()
     if args.demo == "image":
-        image_demo(predictor, vis_folder, args.path, current_time, args.save_result)
+        if os.path.isfile(args.path):
+            image_demo(predictor, vis_folder, args.path, current_time, args.save_result)
+        elif os.path.isdir(args.path):
+            for img_name in os.listdir(args.path):
+                image_demo(predictor, vis_folder, os.path.join(args.path, img_name), current_time, args.save_result)
     elif args.demo == "video" or args.demo == "webcam":
         imageflow_demo(predictor, vis_folder, current_time, args)
 
